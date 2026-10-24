@@ -468,6 +468,89 @@ def cmd_rent(a) -> int:
         return EXIT_ERR
 
 
+# ---- the data disk ----
+
+def cmd_disk(a) -> int:
+    """The data disk of an instance: show it, or add space (--add) or take extra space away (--remove, --remove-all).
+    Without --yes only the plan."""
+    iid = instance_id(a.instance)
+    token, _ = creds.find()
+    inst = console.instance(token, iid)
+    shrink = bool(a.remove or a.remove_all)
+    if a.add and shrink:
+        raise ValueError("--add or --remove, not both")
+    q0 = console.disk_quote(token, iid, inst["machine_id"], 0)
+    now_disk = {"included_gb": q0["included_gb"], "extra_gb": q0["extra_gb"], "total_gb": q0["included_gb"] + q0["extra_gb"],
+                "used_gb": q0["used_gb"], "can_add_gb": q0["can_add_gb"], "can_remove_gb": q0["can_remove_gb"],
+                "extra_yuan_day": round(q0["day_fen_after"] / 100, 3)}
+    if not a.add and not shrink:
+        out({"instance": iid, "state": inst["state"], "disk": now_disk, "mount": "/root/autodl-tmp"})
+        return 0
+    change = a.add or (q0["extra_gb"] if a.remove_all else a.remove)
+    if change < 1:
+        raise ValueError("the change is at least 1 GB" + (" (there is no extra space to remove)" if a.remove_all else ""))
+    running = inst["state"] not in console.SHUT
+    if shrink:
+        if running:
+            out({"ok": False, "sent": False, "instance": iid, "disk": now_disk, "refused": "extra space can only be "
+                 "removed while the instance is shut down (the console's rule, so data stays consistent): back up "
+                 "what matters, autopilot off ID, then run this again"})
+            return EXIT_REFUSED
+        if inst["charge_type"] != "payg":
+            out({"ok": False, "sent": False, "instance": iid, "refused": "only pay-as-you-go instances can remove "
+                 "space before their term ends"})
+            return EXIT_REFUSED
+        if change > q0["can_remove_gb"]:
+            out({"ok": False, "sent": False, "instance": iid, "disk": now_disk, "refused": f"at most "
+                 f"{q0['can_remove_gb']} GB can be removed now (extra space that is free); delete or move files first"})
+            return EXIT_REFUSED
+    elif change > q0["can_add_gb"]:
+        out({"ok": False, "sent": False, "instance": iid, "disk": now_disk, "refused": f"the host can add at most "
+             f"{q0['can_add_gb']} GB"})
+        return EXIT_REFUSED
+    q = console.disk_quote(token, iid, inst["machine_id"], change, shrink)
+    plan = {"instance": iid, "state": inst["state"], "change": f"{'-' if shrink else '+'}{change} GB",
+            "total_gb_after": q["included_gb"] + q["extra_after_gb"], "extra_gb_after": q["extra_after_gb"],
+            "extra_yuan_day_after": round(q["day_fen_after"] / 100, 3),
+            "billing": "billed by the day; a day is charged at its largest size, so space removed today is still "
+                       "paid for today",
+            "takes_effect": ("only after a restart: until then the instance keeps its old size. A restart is "
+                             "autopilot off then on, which stops running jobs" + (", and in GPU mode the GPU is "
+                             "released and may be taken meanwhile" if inst["mode"] == "gpu" else "")
+                             if running else "at the next power-on")}
+    if not running:
+        plan["reminder"] = BACKUP_NOTE
+    if shrink:
+        plan["warning"] = ("removing space cannot be undone for the files on it: keep the data disk's used space "
+                           f"({q['used_gb']} GB) well inside {q['included_gb'] + q['extra_after_gb']} GB, and back up "
+                           "what matters first")
+    if not a.yes:
+        out({"ok": True, "sent": False, "plan": plan,
+             "next": "show this plan to the user, saying when it takes effect; once they agree, run it again with "
+                     "--yes and --said '<their words>'"})
+        return 0
+    if not (a.said or "").strip():
+        raise ValueError("--said: the user's own words agreeing to this change")
+    try:
+        console.disk_change(token, iid, inst["machine_id"], change, shrink)
+    except console.ApiError as e:
+        out({"ok": False, "sent": True, "done": False, "code": e.code, "msg": e.msg, "plan": plan})
+        return EXIT_REFUSED
+    except console.NoAnswer:
+        pass                                           # read back below what the console now shows
+    after = console.disk_quote(token, iid, inst["machine_id"], 0)
+    done = after["extra_gb"] == q["extra_after_gb"]
+    with State() as st:
+        st.event(iid, "disk", change_gb=-change if shrink else change, extra_gb=after["extra_gb"], said=a.said.strip())
+    res = {"ok": done, "instance": iid, "extra_gb": after["extra_gb"], "total_gb": after["included_gb"] + after["extra_gb"],
+           "extra_yuan_day": round(after["day_fen_after"] / 100, 3), "takes_effect": plan["takes_effect"]}
+    if not done:
+        res["uncertain"] = True
+        res["next"] = "the console does not show the new size yet: read autopilot disk ID before ordering again"
+    out(res)
+    return 0 if done else EXIT_UNCERTAIN
+
+
 # ---- file storage ----
 
 def storage_region(token: str, text: str) -> dict:
@@ -788,8 +871,15 @@ def cmd_off(a) -> int:
         set_timer_checked(token, iid, None)
     with State() as st:
         st.event(iid, "off", via="console" if a.console else "ssh")
-    out({"ok": True, "instance": iid, "states": seen, "bills": sync_bills(token, budget.month_start(now()))})
+    out({"ok": True, "instance": iid, "states": seen, "bills": sync_bills(token, budget.month_start(now())),
+         "release_at": console.stamp(inst["release_at"]) if inst["release_at"] else None,
+         "reminder": BACKUP_NOTE})
     return 0
+
+
+BACKUP_NOTE = ("an instance shut down for 15 days in a row is released and everything on it is deleted, data disk "
+               "included; before leaving it off for long, back up what matters: autopilot pull to this computer, or "
+               "copy it to /root/autodl-fs (file storage, kept apart from the instance)")
 
 
 def cmd_timer(a) -> int:
@@ -932,6 +1022,14 @@ def parser() -> argparse.ArgumentParser:
     g = s.add_mutually_exclusive_group()
     g.add_argument("--guard", dest="guard", action="store_const", const=True, default=None)
     g.add_argument("--no-guard", dest="guard", action="store_const", const=False)
+
+    s = add("disk", cmd_disk, "the data disk of an instance: show it, add space or remove extra space (a plan first)")
+    s.add_argument("instance")
+    s.add_argument("--add", type=int, metavar="GB", help="add this much space (billed by the day)")
+    s.add_argument("--remove", type=int, metavar="GB", help="remove this much extra space (shut down, pay as you go)")
+    s.add_argument("--remove-all", action="store_true", help="remove all extra space")
+    s.add_argument("--said", help="the user's own words agreeing to the change (with --yes)")
+    s.add_argument("--yes", action="store_true", help="order it; without it only the plan is shown")
 
     s = add("storage", cmd_storage, "file storage (文件存储) of a region: list, init, ls, put, get, rm")
     s.add_argument("action", choices=["list", "init", "ls", "put", "get", "rm"])

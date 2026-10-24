@@ -98,6 +98,8 @@ class FakeConsole:
         self.on_power_on = "running"
         self.machines = []
         self.rented = []
+        self.extra_gb = 0                 # data disk space beyond the included 50 GB
+        self.removable_gb = 0             # of that extra space, how much is free to take away
         self.rent_id = "newinst001-0a1b2c3d"
 
     def __call__(self, req, timeout=None):
@@ -154,6 +156,21 @@ class FakeConsole:
                                                     "Valid": True})
             self.inst["status"] = "running"
             return self.answer("Success", self.rent_id)
+        elif path == "/api/v1/instance/snapshot":
+            return self.answer("Success", {"expand_data_disk_size": self.extra_gb << 30,
+                                           "machine_info_snapshot": {"max_instance_disk_size": 50 << 30}})
+        elif path == "/api/v1/order/data_disk/change/preview":
+            return self.answer("Success", {"data_disk_used": 3 << 30, "max_expand_size": 900 << 30,
+                                           "max_reduce_size": self.removable_gb << 30, "prepay_expand_data_disk": False,
+                                           "data_disk_deal_daily_price": 7 * (body["data_disk_expand_size"] >> 30)})
+        elif path == "/api/v1/order/data_disk/change":
+            gb = body["change_size"] >> 30
+            if body["opt_type"] == "data_disk_reduce":
+                self.extra_gb -= gb
+                self.removable_gb -= gb
+            else:
+                self.extra_gb += gb
+                self.removable_gb += gb
         elif path == "/api/v1/instance/power_off":
             self.inst.update(status="shutdown")
         elif path == "/api/v1/instance/timed/shutdown":

@@ -76,6 +76,13 @@
   - 删除：`DELETE /file {filename, dir_path}`；`DELETE /dir {dir_name, dir_path}`。
 - 实测：两块的文件上传、列目录、下载逐字节一致、删除文件与目录，根目录与用量恢复原状。
 
+## 数据盘扩容 / 缩容（2026-10-24，读取与报价实测，**未实际下单**）
+
+- `GET /api/v1/instance/snapshot?instance_uuid=` → `expand_data_disk_size`（已扩容字节）、`machine_info_snapshot.max_instance_disk_size`（含的空间，如 50 GiB）。
+- 报价（不下单）：`POST /api/v1/order/data_disk/change/preview {change_size, data_disk_expand_size（变化后的扩容总量）, instance_uuid, machine_id, opt_type: data_disk_expand | data_disk_reduce}` → `max_expand_size`、`max_reduce_size`、`data_disk_used`、`data_disk_deal_daily_price`（厘/天，扩容总量的价格；10 GiB 为 70 厘）、`prepay_expand_data_disk`。
+- 下单：`POST /api/v1/order/data_disk/change`，请求体同上，但网页把 `data_disk_expand_size` 也填成 `change_size`。
+- 网页的规则：运行中可以扩容，但提示"运行中的实例扩容数据盘后需重启实例生效"；缩容只能在关机状态（"为确保数据一致，请在关机状态下缩容数据盘"），且只限按量计费；按量计费"当日产生的费用以最高容量配置计费"。
+
 ## 仍未验证
 
 - 有卡开机（`payload: "gpu"`）：主机空闲卡为 0 时的错误码与提示。

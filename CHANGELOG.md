@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- `disk`: the data disk of an instance. Shows size, use and what can be added or removed; `--add GB` / `--remove GB` / `--remove-all` give a plan first (size after, price per day, when it takes effect) and order with `--yes --said`. Adding to a running instance takes effect only after a restart (said in the plan); removing only while shut down and pay as you go. Shown and quoted on a real account; an order has not been run
+- `off` prints `release_at` and a reminder to back up before a long shutdown (15 days off and the instance is released with its data)
 - The guard's idle time follows the mode: 15 minutes in GPU mode (`idle_min`), 60 in no-GPU mode (`idle_min_nogpu`), since no-GPU mode is mostly for long downloads and costs 0.1 yuan an hour; `--idle` still sets it for one power-on
 - `storage`: the file storage (文件存储) of a region, through the console with every instance off: `list` the regions, `init` one (with `--yes`), `ls`, `put` a file or folder (chunked like the web page, free space checked first), `get` a file or folder, `rm` (a folder only with `--recursive`, never the root). Download links are never printed. Checked on a real account (upload, listing, download byte for byte, deletion)
 

@@ -15,8 +15,9 @@ You manage the user's AutoDL instance with the `autopilot` command. Every comman
 4. **Jobs through `autopilot run`.** It gives the job a name, a log and `--then-off`; the guard sees its resource use like any other process.
 5. **Do not cut jobs.** `off` refuses while jobs run (exit 3). Use `--force` (or `off --console --force` when SSH is down) only when the user agrees at that moment.
 6. **Renting needs the user's yes, every time.** `autopilot rent` without `--yes` only prints a plan; show it (machine, GPUs, price per hour, image, planned cost) and rent only after the user agrees to that plan, with `--yes --said '<their words>'`. A grant for the instance does not cover renting another one.
-7. **Deleting stored files needs the user's yes.** `autopilot storage rm` deletes for good (no recycle bin); name what will go and delete only after the user agrees. `storage init` also only with their agreement (`--yes`).
-8. **Nothing else in the console.** Autopilot cannot release, reset, clone, recharge or renew, and you do not do these things any other way.
+7. **Disk changes need the user's yes.** `autopilot disk ID --add GB` / `--remove GB` / `--remove-all` without `--yes` only prints a plan; show it, including when it takes effect, and order only after the user agrees, with `--yes --said '<their words>'`.
+8. **Deleting stored files needs the user's yes.** `autopilot storage rm` deletes for good (no recycle bin); name what will go and delete only after the user agrees. `storage init` also only with their agreement (`--yes`).
+9. **Nothing else in the console.** Autopilot cannot release, reset, clone, recharge or renew, and you do not do these things any other way.
 
 ## First use on a computer
 
@@ -65,18 +66,32 @@ Choose the mode: no-GPU (0.1 yuan/h) for moving data, installing pure-Python pac
 - Exit 3 with `MachineGpuNumUpdateFailed`: the GPUs were taken meanwhile; search again. Exit 6: the rent got no answer and no new instance is listed: `autopilot status` in a minute, never rent again blindly.
 - Autopilot cannot migrate or clone; moving data from an old instance is the user's choice (the console's 克隆实例, or `pull` then `push`).
 
+## Data disk (数据盘扩容)
+
+The data disk is `/root/autodl-tmp`; each instance includes some space (often 50 GB) and the host can add more, billed by the day (about 0.007 yuan per GB per day; a day is charged at its largest size). `autopilot disk ID` shows the size, the use and how much can be added or removed.
+
+- **When it takes effect.** Adding to a **running** instance is accepted by the console, but the instance keeps its old size **until it is restarted**. Say this before ordering, every time: the user must not think the space appears at once. The restart is `autopilot off ID` then `autopilot on ID --mode M`: it stops running jobs, and in GPU mode releases the GPU, which may be taken meanwhile. So when the instance is running, suggest one of: order now and restart when the jobs are done; or shut down first, order, power on. Adding to a **shut-down** instance takes effect at the next power-on.
+- **The whole flow** (the plan's `takes_effect` says which case applies):
+  1. `autopilot disk ID` — current size and use.
+  2. `autopilot disk ID --add 100` — the plan: size after, price per day, when it takes effect. Show it.
+  3. With the user's yes: `autopilot disk ID --add 100 --yes --said '<their words>'`; it reads the new size back.
+  4. Running: when the user agrees to the restart (after the jobs), `autopilot off ID`, then `autopilot on ID --mode M --hours H`. Shut down: just the next `on`.
+  5. On the instance, `df -h /root/autodl-tmp` shows the new size.
+- **Removing extra space** (`--remove GB`, `--remove-all`): only while shut down and only for pay-as-you-go instances (the console's rules); at most the extra space that is free. Files beyond the new size can be lost: have the user back up first. Today's charge stays at today's largest size.
+
 ## File storage (文件存储)
 
 File storage belongs to a region: once initialized there, every instance of that region mounts it at `/root/autodl-fs` (an instance running at the time sees it after its next power-on). It is filled and emptied from this computer through the console, with every instance off, so no GPU or no-GPU hours are paid for moving data.
 
-- `autopilot storage list`: the regions, `created` or `uninitialized`. `autopilot storage init REGION` shows what it means; `--yes` initializes (rule 7; the account must be bound to WeChat; beyond the free size it is billed by use).
-- `autopilot storage ls REGION [PATH]`, `storage put REGION <local file or folder> [REMOTE_DIR]`, `storage get REGION <remote file or folder> [LOCAL_DIR]`, `storage rm REGION PATH [--recursive]` (rule 7). REGION is a name (or part, like 内蒙), a sign, or an instance ID (its region). `put` checks the free space first; a folder goes with everything in it.
+- `autopilot storage list`: the regions, `created` or `uninitialized`. `autopilot storage init REGION` shows what it means; `--yes` initializes (rule 8; the account must be bound to WeChat; beyond the free size it is billed by use).
+- `autopilot storage ls REGION [PATH]`, `storage put REGION <local file or folder> [REMOTE_DIR]`, `storage get REGION <remote file or folder> [LOCAL_DIR]`, `storage rm REGION PATH [--recursive]` (rule 8). REGION is a name (or part, like 内蒙), a sign, or an instance ID (its region). `put` checks the free space first; a folder goes with everything in it.
 - Prefer it for datasets and model weights: upload once while everything is off, then the instance reads `/root/autodl-fs/...` (copy hot data to the data disk `/root/autodl-tmp` if the job reads it many times). Results the user wants to keep can be written there and fetched with `storage get` after the shutdown.
 - The storage itself cannot be deleted; emptying it stops what it costs beyond the free size.
 
 ## Power off and spending
 
 - `autopilot off ID` shuts down over SSH, waits until the console shows it shut down, cancels a leftover timer and syncs the bills.
+- **Back up before a long shutdown.** An instance shut down for 15 days in a row is released and everything on it is deleted, the data disk included. Whenever the instance is shut down (by `off`, the guard, the timer) and may stay off for days, remind the user to keep what matters elsewhere: `autopilot pull` to this computer, or copy it to `/root/autodl-fs` (file storage, kept apart from the instance) before shutting down. `off` prints `release_at`.
 - `autopilot spend [ID]` gives this month's spending from the cached bills; `autopilot sync` refreshes them. `autopilot balance` reads the balance.
 - Before keeping an instance on much longer than planned, `autopilot check ID --mode M --hours H`.
 - Report briefly: after power-on (mode, price per hour, idle minutes), after power-off (duration, cost from the bills, this month's total).

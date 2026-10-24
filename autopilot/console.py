@@ -3,9 +3,9 @@
 This is the API the console's own web page uses, not a documented public one; the requests and answers were
 checked on a real account (dev/probe/FINDINGS.md). Only the requests in ENDPOINTS are ever sent: reading the
 instance list, the balance, the billing detail, the server time, the GPU market (machines, regions, GPU models)
-and the images; renting one pay-as-you-go instance on a market machine; powering on (with or without GPU) and
-off; setting or cancelling the timed shutdown. Nothing here can release, reset, clone, migrate, renew or
-recharge.
+and the images; renting one pay-as-you-go instance on a market machine; adding data disk space to an instance or
+taking it away; powering on (with or without GPU) and off; setting or cancelling the timed shutdown. Nothing here
+can release, reset, clone, migrate, renew or recharge.
 
 Amounts in the console's answers are in li (a thousandth of a yuan); this module turns them into fen (a
 hundredth of a yuan, integers) or yuan. Times are Beijing time (UTC+8).
@@ -39,6 +39,9 @@ ENDPOINTS = {
     "images": ("POST", "/api/v1/image/get", False),
     "private_images": ("POST", "/api/v1/image/private/get", False),
     "rent": ("POST", "/api/v1/order/instance/create/payg", True),   # creates and starts a pay-as-you-go instance
+    "snapshot": ("GET", "/api/v1/instance/snapshot", False),
+    "disk_quote": ("POST", "/api/v1/order/data_disk/change/preview", False),
+    "disk_change": ("POST", "/api/v1/order/data_disk/change", True),
     "power_on": ("POST", "/api/v1/instance/power_on", True),
     "power_off": ("POST", "/api/v1/instance/power_off", True),
     "timer": ("POST", "/api/v1/instance/timed/shutdown", True),
@@ -303,6 +306,38 @@ def rent(token: str, machine_id: str, gpus: int, image: str, private: bool = Fal
     if not isinstance(data, str) or not data:
         raise NoAnswer(f"rent: the answer has no instance ID ({type(data).__name__})")
     return data
+
+
+# ---- the data disk ----
+
+SHUT = {"shutdown", "shutdown_by_starting_error", "shutdown_by_running_error"}
+
+
+def disk_quote(token: str, iid: str, machine_id: str, change_gb: int, shrink: bool = False) -> dict:
+    """What the data disk would be after adding (or, shrink=True, taking away) change_gb, read from the console's
+    price preview without ordering anything: sizes in GB and the daily price in fen of the extra space."""
+    snap = request(token, "snapshot", {"instance_uuid": iid}) or {}
+    base = int((snap.get("machine_info_snapshot") or {}).get("max_instance_disk_size") or 0)
+    extra = int(snap.get("expand_data_disk_size") or 0)
+    change = change_gb * GIB
+    after = extra - change if shrink else extra + change
+    q = request(token, "disk_quote", {"change_size": change, "data_disk_expand_size": after, "instance_uuid": iid,
+                                      "machine_id": machine_id,
+                                      "opt_type": "data_disk_reduce" if shrink else "data_disk_expand"}) or {}
+    return {"included_gb": base // GIB, "extra_gb": extra // GIB, "extra_after_gb": after // GIB,
+            "used_gb": round(int(q.get("data_disk_used") or 0) / GIB, 2),
+            "can_add_gb": int(q.get("max_expand_size") or 0) // GIB,
+            "can_remove_gb": int(q.get("max_reduce_size") or 0) // GIB,
+            "day_fen_after": int(q.get("data_disk_deal_daily_price") or 0) / 10,
+            "prepaid": bool(q.get("prepay_expand_data_disk"))}
+
+
+def disk_change(token: str, iid: str, machine_id: str, change_gb: int, shrink: bool = False) -> None:
+    """Order the change once, with the body the console's own dialog sends."""
+    change = change_gb * GIB
+    request(token, "disk_change", {"change_size": change, "data_disk_expand_size": change, "instance_uuid": iid,
+                                   "machine_id": machine_id,
+                                   "opt_type": "data_disk_reduce" if shrink else "data_disk_expand"})
 
 
 def bills(token: str, since: int, max_pages: int = 20) -> tuple:
