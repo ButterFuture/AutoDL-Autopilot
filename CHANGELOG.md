@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- `on` and `rent --yes` check the region's file storage first. When it is not initialized they send nothing and say to initialize it (`storage init`), since an instance mounts `/root/autodl-fs` only when it starts and storage initialized later means powering off and on again; the rent plan says the same. `--without-storage` goes on without it, `config set storage_check false` stops the check. A region without file storage, or a list that cannot be read, does not stop anything
 - READMEs rewritten in plainer language; they now cover the data disk, the file storage and backing up before a long shutdown
 - `disk`: the data disk of an instance. Shows size, use and what can be added or removed; `--add GB` / `--remove GB` / `--remove-all` give a plan first (size after, price per day, when it takes effect) and order with `--yes --said`. Adding to a running instance takes effect only after a restart (said in the plan); removing only while shut down and pay as you go. Shown and quoted on a real account; an order has not been run
 - `off` prints `release_at` and a reminder to back up before a long shutdown (15 days off and the instance is released with its data)

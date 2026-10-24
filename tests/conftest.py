@@ -101,6 +101,7 @@ class FakeConsole:
         self.extra_gb = 0                 # data disk space beyond the included 50 GB
         self.removable_gb = 0             # of that extra space, how much is free to take away
         self.rent_id = "newinst001-0a1b2c3d"
+        self.storage = {"西北B区": ("west-B", "created"), "内蒙B区": ("nm-B1", "created")}    # name: (sign, status)
 
     def __call__(self, req, timeout=None):
         path = req.full_url.split("www.autodl.com", 1)[1].split("?", 1)[0]
@@ -128,6 +129,14 @@ class FakeConsole:
             return self.answer("Success", {"list": self.bills, "max_page": 1})
         if path == "/api/v1/region/list":
             return self.answer("Success", REGIONS)
+        if path == "/api/v1/file_storage/list":
+            return self.answer("Success", [{"sign": sign, "name": name, "status": status, "fs_type": "autofs",
+                                            "export_addr_1": "region.example", "port": 7007, "free_size": 20 << 30,
+                                            "initialized_at": None} for name, (sign, status) in self.storage.items()])
+        if path == "/api/v1/file_storage/init":
+            name = next(n for n, (sg, _) in self.storage.items() if sg == body["sign"])
+            self.storage[name] = (body["sign"], "created")
+            return self.answer("Success", None)
         if path == "/api/v1/machine/gpu_type":
             return self.answer("Success", GPU_MODELS)
         if path == "/api/v1/user/machine/list":     # like the console: filters by model, region and machine,

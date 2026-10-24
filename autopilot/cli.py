@@ -24,7 +24,7 @@ EXIT_BUDGET, EXIT_NO_GRANT, EXIT_WRONG_HOST, EXIT_TOKEN = 10, 12, 13, 14
 INSTANCE_RE = re.compile(r"^[0-9a-z]{6,16}-[0-9a-f]{6,12}\Z")
 JOB_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,63}\Z")
 DEFAULTS = {"key": "", "workdir": "/root/autodl-tmp", "env": "", "idle_min": 15, "idle_min_nogpu": 60, "fallback_min": 30,
-            "guard_default": True, "add_key": True}
+            "guard_default": True, "add_key": True, "storage_check": True}
 BOOL = {"true": True, "on": True, "yes": True, "1": True, "false": False, "off": False, "no": False, "0": False}
 SSH_READY_S = 180          # how long to keep trying SSH after the console says running
 NOW = time.time            # replaced in tests
@@ -116,7 +116,7 @@ def cmd_config(a) -> int:
             value = int(value)
             if value < 1:
                 raise ValueError(f"{a.key} must be at least 1")
-        if a.key in ("guard_default", "add_key"):
+        if a.key in ("guard_default", "add_key", "storage_check"):
             if str(value).lower() not in BOOL:
                 raise ValueError(f"{a.key}: true or false")
             value = BOOL[str(value).lower()]
@@ -420,7 +420,14 @@ def cmd_rent(a) -> int:
         out({"ok": False, "sent": False, "refused": f"the balance ({balance / 100:.2f} yuan) does not cover the "
              f"planned {planned_fen / 100:.2f} yuan", "plan": plan})
         return EXIT_REFUSED
+    fs = storage_unready(token, m["region"], a.without_storage)
+    if fs and a.yes:
+        out({"ok": False, "sent": False, **storage_refusal(fs), "plan": plan})
+        return EXIT_REFUSED
     if not a.yes:
+        if fs:
+            plan["storage"] = {**fs, "note": storage_refusal(fs)["refused"] + f"; autopilot storage init "
+                               f"{fs['sign']} before renting, or rent with --without-storage"}
         out({"ok": True, "sent": False, "plan": plan,
              "tip": "a new instance starts empty: suggest downloading models and data in no-GPU mode first "
                     "(off, then on --mode nogpu at 0.1 yuan/h), then GPU mode to train; while off the GPU is "
@@ -565,6 +572,37 @@ def storage_region(token: str, text: str) -> dict:
     return regions[0]
 
 
+def storage_ready(token: str, region: str) -> dict:
+    """The file storage of the region an instance runs in, read before a power-on or a rent. An instance mounts
+    /root/autodl-fs only when it starts, so storage initialized while it runs is seen only after a restart."""
+    try:
+        found = [r for r in storage.regions(token) if r["name"] == region]
+    except (console.ApiError, console.NoAnswer) as e:
+        return {"region": region, "status": "unknown", "note": f"the file storage list could not be read: {e}"}
+    if not found:
+        return {"region": region, "status": "none", "note": "the region has no file storage"}
+    return {"region": region, "sign": found[0]["sign"], "status": found[0]["status"],
+            "free_gb": found[0]["free_gb"]}
+
+
+def storage_unready(token: str, region: str, skip: bool) -> dict | None:
+    """The file storage state when it stands in the way of a power-on: not initialized, not skipped with
+    --without-storage, and storage_check on."""
+    if skip or not settings()["storage_check"]:
+        return None
+    fs = storage_ready(token, region)
+    return fs if fs["status"] == "uninitialized" else None
+
+
+def storage_refusal(fs: dict) -> dict:
+    return {"refused": f"file storage in {fs['region']} is not initialized: an instance mounts /root/autodl-fs only "
+                       "when it starts, so initializing it later means powering off and on again",
+            "storage": fs,
+            "next": f"ask the user: initialize it first (autopilot storage init {fs['sign']} shows what it means, "
+                    "--yes initializes), then run this again; or, if they do not need file storage, run this again "
+                    "with --without-storage (autopilot config set storage_check false stops asking)"}
+
+
 def cmd_storage(a) -> int:
     token, _ = creds.find()
     if a.action == "list":
@@ -656,6 +694,10 @@ def cmd_on(a) -> int:
     if inst["state"] != "shutdown":
         out({"ok": False, "instance": iid, "sent": False, "refused": f"the instance is {inst['state']}, not shut "
              "down (a running one is taken over with autopilot arm)", "state": inst["state"]})
+        return EXIT_REFUSED
+    fs = storage_unready(token, inst["region"], a.without_storage)
+    if fs:
+        out({"ok": False, "instance": iid, "sent": False, **storage_refusal(fs)})
         return EXIT_REFUSED
     if a.mode == "gpu" and not inst["gpu_free"]:
         out({"ok": False, "instance": iid, "sent": False, "refused": f"no free GPU on its host ({inst['gpu_idle']} "
@@ -978,7 +1020,7 @@ def parser() -> argparse.ArgumentParser:
     s.add_argument("action", choices=["set", "status", "forget"])
     s.add_argument("--source", choices=["auto", "env", "file", "store"], default="auto")
     s.add_argument("--verify", action="store_true", help="status: ask the console whether it accepts the token")
-    s = add("config", cmd_config, "show or change the settings (key, add_key, workdir, env, idle_min, idle_min_nogpu, fallback_min, guard_default)")
+    s = add("config", cmd_config, "show or change the settings (key, add_key, workdir, env, idle_min, idle_min_nogpu, fallback_min, guard_default, storage_check)")
     s.add_argument("action", choices=["show", "set"], nargs="?", default="show")
     s.add_argument("key", nargs="?")
     s.add_argument("value", nargs="?")
@@ -1016,6 +1058,8 @@ def parser() -> argparse.ArgumentParser:
     s.add_argument("--modes", choices=["gpu", "nogpu", "both"], default="both", help="what later power-ons may use")
     s.add_argument("--said", help="the user's own words agreeing to this rent (with --yes)")
     s.add_argument("--yes", action="store_true", help="rent; without it only the plan is shown")
+    s.add_argument("--without-storage", action="store_true",
+                   help="rent although the region's file storage is not initialized")
     s.add_argument("--idle", type=int, help="idle minutes before the guard shuts it down")
     s.add_argument("--fallback", type=int, help="minutes of the fallback timer")
     s.add_argument("--hard-limit", help="keep a console timer this long after the start, e.g. 8h")
@@ -1067,6 +1111,8 @@ def parser() -> argparse.ArgumentParser:
     s.add_argument("--idle", type=int, help="minutes idle before the guard shuts down (default: idle_min in GPU mode, idle_min_nogpu without)")
     s.add_argument("--fallback", type=int, help="minutes of the fallback timer until the guard runs")
     s.add_argument("--hard-limit", help="keep a console timer at start + this (e.g. 8h): a stop that cuts jobs")
+    s.add_argument("--without-storage", action="store_true",
+                   help="power on although the region's file storage is not initialized")
     g = s.add_mutually_exclusive_group()
     g.add_argument("--guard", dest="guard", action="store_true", default=None,
                    help="start the guard this time, whatever the setting")

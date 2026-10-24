@@ -29,8 +29,9 @@ Write what you settled into the project's instruction file (`CLAUDE.md`) under `
 
 ## Power on
 
-`autopilot on ID --mode gpu|nogpu --hours <planned hours>` does, in order: grant and budget check, balance check, a console timer at now + 30 min as a fallback, the power-on, waiting until running, starting the guard over SSH, then cancelling the fallback (or keeping `--hard-limit 8h` as a console timer if the user wants a hard stop that cuts jobs).
+`autopilot on ID --mode gpu|nogpu --hours <planned hours>` does, in order: the region's file storage check, grant and budget check, balance check, a console timer at now + 30 min as a fallback, the power-on, waiting until running, starting the guard over SSH, then cancelling the fallback (or keeping `--hard-limit 8h` as a console timer if the user wants a hard stop that cuts jobs).
 
+- Exit 3 with "file storage in … is not initialized": nothing was sent. An instance mounts `/root/autodl-fs` only when it starts, so storage initialized after the power-on means powering off and on again. Ask the user whether to initialize it first (`autopilot storage init SIGN`, rule 8), then power on; if they don't need it, `on ... --without-storage`, and if they never want to be asked, `config set storage_check false`. A region without file storage, or a list that cannot be read, does not stop the power-on.
 - Exit 10: over budget. Exit 12: no grant for that mode. Tell the user; do not raise the budget yourself.
 - Exit 3 with "no free GPU": the host's GPUs are taken. Wait and retry every few minutes (tell the user), or use no-GPU mode if the task allows, or show alternatives with `autopilot market --like ID` (below).
 - Exit 1 after powering on ("the guard did not start"): the fallback timer still shuts it down. Check `autopilot doctor` and `autopilot connect ID`, then `autopilot arm ID`.
@@ -63,6 +64,7 @@ Choose the mode: no-GPU (0.1 yuan/h) for moving data, installing pure-Python pac
 - Rent on the chosen machine: `autopilot rent MACHINE --gpus N --hours H --budget <yuan|none> [--image PyTorch|PyTorch:2.5|base-image-…|image-…] [--expand-disk GB]` prints the plan (rule 6); the same command with `--yes --said '<their words>'` rents. The default image is the newest PyTorch the machine's chip and driver run; `autopilot images [--framework X] [--private]` lists the choices; ask when the project needs a particular framework or version.
 - Renting creates the instance and starts it at once (GPU mode, billed from that second). Then it goes like `on`: the fallback timer, waiting until running (the image can take minutes), the key, the guard, the timer cancelled. The new instance gets a grant with `--budget` and `--modes` (default both), recorded with the user's words. Write its ID into `CLAUDE.md`.
 - **First rent: suggest no-GPU mode for the setup.** When showing the plan, tell the user: a new instance has an empty data disk, and downloading models, datasets and packages in GPU mode pays the GPU price while the GPU sits idle. Suggest: right after the rent, `autopilot off`, then `autopilot on ID --mode nogpu` (0.1 yuan/h) for the downloads and the environment, then `off` and `on --mode gpu` to train. Say the risk too: a powered-off instance keeps no GPU, so the host may have none free when switching back (then wait, or find another with `market --like ID`); on a host with few free GPUs, starting the work in GPU mode right away can be the better choice. Let the user decide.
+- The plan carries `storage` when the machine's region has file storage that is not initialized, and `--yes` is then refused (exit 3, nothing sent). Put it to the user with the plan: initialize it before renting (`storage init SIGN`, rule 8), or rent with `--without-storage`.
 - Exit 3 with `MachineGpuNumUpdateFailed`: the GPUs were taken meanwhile; search again. Exit 6: the rent got no answer and no new instance is listed: `autopilot status` in a minute, never rent again blindly.
 - Autopilot cannot migrate or clone; moving data from an old instance is the user's choice (the console's 克隆实例, or `pull` then `push`).
 
@@ -81,7 +83,7 @@ The data disk is `/root/autodl-tmp`; each instance includes some space (often 50
 
 ## File storage (文件存储)
 
-File storage belongs to a region: once initialized there, every instance of that region mounts it at `/root/autodl-fs` (an instance running at the time sees it after its next power-on). It is filled and emptied from this computer through the console, with every instance off, so no GPU or no-GPU hours are paid for moving data.
+File storage belongs to a region: once initialized there, every instance of that region mounts it at `/root/autodl-fs` (an instance running at the time sees it after its next power-on, which is why `on` and `rent` check it first). It is filled and emptied from this computer through the console, with every instance off, so no GPU or no-GPU hours are paid for moving data.
 
 - `autopilot storage list`: the regions, `created` or `uninitialized`. `autopilot storage init REGION` shows what it means; `--yes` initializes (rule 8; the account must be bound to WeChat; beyond the free size it is billed by use).
 - `autopilot storage ls REGION [PATH]`, `storage put REGION <local file or folder> [REMOTE_DIR]`, `storage get REGION <remote file or folder> [LOCAL_DIR]`, `storage rm REGION PATH [--recursive]` (rule 8). REGION is a name (or part, like 内蒙), a sign, or an instance ID (its region). `put` checks the free space first; a folder goes with everything in it.

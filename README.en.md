@@ -21,7 +21,7 @@ Say "start the training" and the AI checks this month's budget, powers the insta
 Power, the shutdown timer, the balance and the bills go through the console's API, so there is no browser to open and each step takes seconds. It can also:
 
 - search the GPU market by model, region, free GPUs, price and CUDA version, usually in about a second, and rent the machine you pick after you agree to the plan;
-- upload, download and delete files on the file storage (`/root/autodl-fs`) while the instance is off, so moving data costs no instance hours;
+- upload, download and delete files on the file storage (`/root/autodl-fs`) while the instance is off, so moving data costs no instance hours. An instance mounts the file storage only when it starts, so before each power-on or rent it checks whether the region's storage is initialized and, if not, asks you first instead of making you restart halfway;
 - add data disk space or remove it, with a price quote first and a clear note on when the change takes effect.
 
 <a id="start"></a>
