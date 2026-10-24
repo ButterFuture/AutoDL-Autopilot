@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- READMEs rewritten in plainer language; they now cover the data disk, the file storage and backing up before a long shutdown
 - `disk`: the data disk of an instance. Shows size, use and what can be added or removed; `--add GB` / `--remove GB` / `--remove-all` give a plan first (size after, price per day, when it takes effect) and order with `--yes --said`. Adding to a running instance takes effect only after a restart (said in the plan); removing only while shut down and pay as you go. Shown and quoted on a real account; an order has not been run
 - `off` prints `release_at` and a reminder to back up before a long shutdown (15 days off and the instance is released with its data)
 - The guard's idle time follows the mode: 15 minutes in GPU mode (`idle_min`), 60 in no-GPU mode (`idle_min_nogpu`), since no-GPU mode is mostly for long downloads and costs 0.1 yuan an hour; `--idle` still sets it for one power-on
