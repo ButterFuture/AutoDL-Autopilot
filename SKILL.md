@@ -1,6 +1,6 @@
 ---
 name: autodl-autopilot
-description: Use when a project's experiments run on an AutoDL GPU instance and it needs powering on or off (GPU mode 有卡 or no-GPU mode 无卡), a job run on it, files moved, its budget or spending checked, or kept from billing while idle (空转, 忘关机, 自动关机); when choosing a machine on the AutoDL GPU market (算力市场, 找机器, 哪里有空闲卡, 最便宜的 4090) or renting one; when moving files to or from AutoDL file storage (文件存储, autodl-fs, 上传数据集); also before experiments, training or data transfer on such an instance, including automated experiment pipelines (自动跑实验).
+description: Use when a project's experiments run on an AutoDL GPU instance and it needs powering on or off (有卡 or 无卡), a job run on it, files moved, budget or spending checked, or kept from billing while idle (空转, 忘关机, 自动关机); when choosing or renting a machine on the GPU market (算力市场, 找机器, 空闲卡); when moving files to or from AutoDL file storage (文件存储, autodl-fs); also before experiments, training or data transfer there, including automated experiment pipelines (自动跑实验).
 ---
 
 # AutoDL Autopilot
