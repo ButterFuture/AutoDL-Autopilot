@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="400" viewBox="0 0 1280 400" role="img" aria-labelledby="t d">
+<title id="t">safety</title>
+<desc id="d">费用控制的三道机制：预算关口在开机前核对，守护程序空闲即关机，控制台定时关机到时即关机。</desc>
+<defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#131417"/><stop offset="1" stop-color="#1F2126"/></linearGradient></defs>
+<rect x="1" y="1" width="1278" height="398" rx="24" fill="url(#bg)" stroke="#FFFFFF" stroke-opacity="0.10"/>
+<rect x="40" y="40" width="380" height="320" rx="18" fill="#F5C451" fill-opacity="0.06" stroke="#F5C451" stroke-width="1.5"/>
+<circle cx="230" cy="140" r="66" fill="#F5C451" fill-opacity="0.10"/>
+<circle cx="230" cy="140" r="56" fill="#131417" stroke="#F5C451" stroke-width="3"/>
+<line x1="202.2" y1="112.2" x2="202.2" y2="167.8" stroke="#F5C451" stroke-width="4.2" stroke-linecap="round"/>
+<line x1="257.8" y1="112.2" x2="257.8" y2="167.8" stroke="#F5C451" stroke-width="4.2" stroke-linecap="round"/>
+<line x1="202.2" y1="134.8" x2="257.8" y2="134.8" stroke="#F5C451" stroke-width="4.2" stroke-linecap="round"/>
+<circle cx="230" cy="153.2" r="7.6" fill="none" stroke="#F5C451" stroke-width="3.1"/>
+<text x="230" y="262" fill="#F4F1EC" font-family="-apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans CJK SC', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="30" font-weight="600" text-anchor="middle">预算关口</text>
+<text x="230" y="304" fill="#ABA59C" font-family="-apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans CJK SC', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="20" font-weight="500" text-anchor="middle">每次开机前核对</text>
+<rect x="450" y="40" width="380" height="320" rx="18" fill="#3DD68C" fill-opacity="0.06" stroke="#3DD68C" stroke-width="1.5"/>
+<circle cx="640" cy="140" r="66" fill="#3DD68C" fill-opacity="0.10"/>
+<circle cx="640" cy="140" r="56" fill="#131417" stroke="#3DD68C" stroke-width="3"/>
+<path d="M 640.0 105.3 L 667.8 117.4 V 141.7 Q 667.8 164.3 640.0 174.7 Q 612.2 164.3 612.2 141.7 V 117.4 Z" fill="none" stroke="#3DD68C" stroke-width="3.5" stroke-linejoin="round"/>
+<path d="M 622.6 140.0 H 633.1 L 638.3 129.6 L 644.2 149.7 L 648.7 140.0 H 657.4" fill="none" stroke="#3DD68C" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="640" y="262" fill="#F4F1EC" font-family="-apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans CJK SC', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="30" font-weight="600" text-anchor="middle">守护程序</text>
+<text x="640" y="304" fill="#ABA59C" font-family="-apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans CJK SC', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="20" font-weight="500" text-anchor="middle">空闲即关机，对话中断也生效</text>
+<rect x="860" y="40" width="380" height="320" rx="18" fill="#FF6B6B" fill-opacity="0.06" stroke="#FF6B6B" stroke-width="1.5"/>
+<circle cx="1050" cy="140" r="66" fill="#FF6B6B" fill-opacity="0.10"/>
+<circle cx="1050" cy="140" r="56" fill="#131417" stroke="#FF6B6B" stroke-width="3"/>
+<circle cx="1050" cy="140" r="27.8" fill="none" stroke="#FF6B6B" stroke-width="3.5"/>
+<path d="M 1050 124.4 V 140 L 1061.1 146.9" fill="none" stroke="#FF6B6B" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+<line x1="1028.5" y1="107.0" x2="1034.9" y2="112.9" stroke="#FF6B6B" stroke-width="3.5" stroke-linecap="round"/>
+<line x1="1071.5" y1="107.0" x2="1065.1" y2="112.9" stroke="#FF6B6B" stroke-width="3.5" stroke-linecap="round"/>
+<text x="1050" y="262" fill="#F4F1EC" font-family="-apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans CJK SC', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="30" font-weight="600" text-anchor="middle">控制台定时关机</text>
+<text x="1050" y="304" fill="#ABA59C" font-family="-apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans CJK SC', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="20" font-weight="500" text-anchor="middle">到时即关机，按需设置</text>
+</svg>

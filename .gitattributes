@@ -1,0 +1,5 @@
+# Everything is LF, so guard.sh and the POSIX launcher survive a checkout on Windows (core.autocrlf);
+# the Windows launcher alone keeps CRLF, as cmd.exe expects.
+* text=auto eol=lf
+*.cmd text eol=crlf
+*.svg text eol=lf

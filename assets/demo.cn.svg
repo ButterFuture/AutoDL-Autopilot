@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="420" viewBox="0 0 1280 420" role="img" aria-labelledby="t d">
+<title id="t">demo</title>
+<desc id="d">一次运行：用户说把训练跑起来，依次经过预算核对、开机、运行任务、关机与记账，历时 8 分 47 秒，费用 0.14 元。</desc>
+<defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#131417"/><stop offset="1" stop-color="#1F2126"/></linearGradient></defs>
+<rect x="1" y="1" width="1278" height="418" rx="24" fill="url(#bg)" stroke="#FFFFFF" stroke-opacity="0.10"/>
+<rect x="40" y="28" width="1200" height="364" rx="18" fill="#17181C" fill-opacity="1" stroke="#34373F" stroke-width="2"/>
+<circle cx="72" cy="58" r="6" fill="#FF6B6B"/>
+<circle cx="94" cy="58" r="6" fill="#F5C451"/>
+<circle cx="116" cy="58" r="6" fill="#3DD68C"/>
+<rect x="70" y="84" width="560" height="52" rx="12" fill="#131417" fill-opacity="1" stroke="#34373F" stroke-width="1.5"/>
+<path d="M 92 100 l 9 9 l -9 9" fill="none" stroke="#FF8A3D" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="122" y="119" fill="#F4F1EC" font-family="'SF Mono', Menlo, Consolas, 'Liberation Mono', 'PingFang SC', 'Microsoft YaHei', monospace" font-size="24" font-weight="500" text-anchor="start">把训练跑起来</text>
+<line x1="232" y1="226" x2="358" y2="226" stroke="#F5C451" stroke-width="4" stroke-opacity="0.6"/>
+<line x1="462" y1="226" x2="588" y2="226" stroke="#FF8A3D" stroke-width="4" stroke-opacity="0.6"/>
+<line x1="692" y1="226" x2="818" y2="226" stroke="#3DD68C" stroke-width="4" stroke-opacity="0.6"/>
+<line x1="922" y1="226" x2="1048" y2="226" stroke="#FF6B6B" stroke-width="4" stroke-opacity="0.6"/>
+<circle cx="180" cy="226" r="52" fill="#F5C451" fill-opacity="0.10"/>
+<circle cx="180" cy="226" r="42" fill="#131417" stroke="#F5C451" stroke-width="3"/>
+<rect x="159.2" y="211.7" width="41.7" height="28.6" rx="4.7" fill="none" stroke="#F5C451" stroke-width="3.1"/>
+<rect x="186.5" y="221.3" width="14.3" height="9.4" rx="2.6" fill="none" stroke="#F5C451" stroke-width="2.6"/>
+<text x="180" y="316" fill="#F4F1EC" font-family="-apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans CJK SC', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="600" text-anchor="middle">预算核对</text>
+<circle cx="410" cy="226" r="52" fill="#FF8A3D" fill-opacity="0.10"/>
+<circle cx="410" cy="226" r="42" fill="#131417" stroke="#FF8A3D" stroke-width="3"/>
+<path d="M 393.9 211.7 A 21.4 21.4 0 1 0 426.1 211.7" fill="none" stroke="#FF8A3D" stroke-width="4.2" stroke-linecap="round"/>
+<line x1="410" y1="201.3" x2="410" y2="222.1" stroke="#FF8A3D" stroke-width="4.2" stroke-linecap="round"/>
+<text x="410" y="316" fill="#F4F1EC" font-family="-apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans CJK SC', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="600" text-anchor="middle">开机</text>
+<circle cx="640" cy="226" r="52" fill="#3DD68C" fill-opacity="0.10"/>
+<circle cx="640" cy="226" r="42" fill="#131417" stroke="#3DD68C" stroke-width="3"/>
+<rect x="614.0" y="211.7" width="52.1" height="28.6" rx="4.7" fill="none" stroke="#3DD68C" stroke-width="2.6"/>
+<circle cx="628.3" cy="226.0" r="8.3" fill="none" stroke="#3DD68C" stroke-width="2.1"/>
+<circle cx="628.3" cy="226.0" r="1.8" fill="#3DD68C"/>
+<circle cx="651.7" cy="226.0" r="8.3" fill="none" stroke="#3DD68C" stroke-width="2.1"/>
+<circle cx="651.7" cy="226.0" r="1.8" fill="#3DD68C"/>
+<text x="640" y="316" fill="#F4F1EC" font-family="-apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans CJK SC', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="600" text-anchor="middle">运行任务</text>
+<circle cx="870" cy="226" r="52" fill="#FF6B6B" fill-opacity="0.10"/>
+<circle cx="870" cy="226" r="42" fill="#131417" stroke="#FF6B6B" stroke-width="3"/>
+<path d="M 855.5 214.4 A 19.2 19.2 0 1 0 884.5 214.4" fill="none" stroke="#FF6B6B" stroke-width="3.7" stroke-linecap="round"/>
+<line x1="870" y1="205.0" x2="870" y2="223.8" stroke="#FF6B6B" stroke-width="3.7" stroke-linecap="round"/>
+<text x="870" y="316" fill="#F4F1EC" font-family="-apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans CJK SC', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="600" text-anchor="middle">关机</text>
+<circle cx="1100" cy="226" r="52" fill="#F5C451" fill-opacity="0.10"/>
+<circle cx="1100" cy="226" r="42" fill="#131417" stroke="#F5C451" stroke-width="3"/>
+<path d="M 1085.7 206.5 H 1114.3 V 245.5 l -4.7 -3.1 l -4.7 3.1 l -4.9 -3.1 l -4.7 3.1 l -4.7 -3.1 l -4.9 3.1 Z" fill="none" stroke="#F5C451" stroke-width="2.6" stroke-linejoin="round"/>
+<line x1="1091.4" y1="215.6" x2="1108.6" y2="215.6" stroke="#F5C451" stroke-width="2.3" stroke-linecap="round"/>
+<line x1="1091.4" y1="222.9" x2="1108.6" y2="222.9" stroke="#F5C451" stroke-width="2.3" stroke-linecap="round"/>
+<path d="M 1093.5 232.5 l 4.7 4.7 l 8.3 -8.3" fill="none" stroke="#F5C451" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="1100" y="316" fill="#F4F1EC" font-family="-apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans CJK SC', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="600" text-anchor="middle">记账</text>
+<rect x="467.90697674418607" y="340" width="344.18604651162786" height="38" rx="19.0" fill="#FF8A3D" fill-opacity="0.12" stroke="#FF8A3D" stroke-width="1.5"/>
+<text x="640" y="365" fill="#FF8A3D" font-family="-apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans CJK SC', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="600" text-anchor="middle">本次 8 分 47 秒 · ￥0.14</text>
+</svg>

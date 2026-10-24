@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="400" viewBox="0 0 1280 400" role="img" aria-labelledby="t d">
+<title id="t">AutoDL Autopilot 项目头图</title>
+<desc id="d">项目名 AutoDL Autopilot，右侧是一块指针指向关机的自动驾驶仪表；文字为开机、运行任务、关机，以及三项特点。</desc>
+<defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#131417"/><stop offset="1" stop-color="#1F2126"/></linearGradient></defs>
+<rect x="1" y="1" width="1278" height="398" rx="24" fill="url(#bg)" stroke="#FFFFFF" stroke-opacity="0.10"/>
+<text x="72" y="150" font-family="-apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans CJK SC', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="64" font-weight="800"><tspan fill="#F4F1EC">AutoDL </tspan><tspan fill="#FF8A3D">Autopilot</tspan></text>
+<rect x="74" y="172" width="64" height="5" rx="2.5" fill="#FF8A3D"/><rect x="146" y="172" width="24" height="5" rx="2.5" fill="#3DD68C"/>
+<text x="72" y="228" fill="#F4F1EC" font-family="-apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans CJK SC', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="30" font-weight="600" text-anchor="start">开机、运行任务、关机，交给 AI</text>
+<text x="72" y="270" fill="#ABA59C" font-family="-apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans CJK SC', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="500" text-anchor="start">空闲自动关机，每一笔都记账</text>
+<rect x="72" y="304" width="245.4418604651163" height="40" rx="20" fill="#FF8A3D" fill-opacity="0.12" stroke="#FF8A3D" stroke-width="1.5"/>
+<text x="194.72093023255815" y="330" fill="#FF8A3D" font-family="-apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans CJK SC', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="17" font-weight="600" text-anchor="middle">控制台接口，无需浏览器</text>
+<rect x="329.4418604651163" y="304" width="186.13953488372093" height="40" rx="20" fill="#F5C451" fill-opacity="0.12" stroke="#F5C451" stroke-width="1.5"/>
+<text x="422.51162790697674" y="330" fill="#F5C451" font-family="-apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans CJK SC', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="17" font-weight="600" text-anchor="middle">开机前过预算关口</text>
+<rect x="527.5813953488372" y="304" width="146.6046511627907" height="40" rx="20" fill="#3DD68C" fill-opacity="0.12" stroke="#3DD68C" stroke-width="1.5"/>
+<text x="600.8837209302326" y="330" fill="#3DD68C" font-family="-apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans CJK SC', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="17" font-weight="600" text-anchor="middle">空闲自动关机</text>
+<circle cx="1035" cy="205" r="161" fill="#FF8A3D" fill-opacity="0.05"/>
+<circle cx="1035" cy="205" r="135" fill="#1A1C21" stroke="#34373F" stroke-width="2"/>
+<path d="M 937.1 261.5 A 113 113 0 0 1 1035.0 92.0" fill="none" stroke="#3DD68C" stroke-width="12" stroke-linecap="round" stroke-opacity="0.85"/>
+<path d="M 1035.0 92.0 A 113 113 0 0 1 1132.9 261.5" fill="none" stroke="#FF8A3D" stroke-width="12" stroke-linecap="round"/>
+<line x1="956.2" y1="250.5" x2="944.1" y2="257.5" stroke="#ABA59C" stroke-width="3" stroke-opacity="0.7"/>
+<line x1="945.4" y1="220.8" x2="935.5" y2="222.5" stroke="#ABA59C" stroke-width="2" stroke-opacity="0.7"/>
+<line x1="945.4" y1="189.2" x2="935.5" y2="187.5" stroke="#ABA59C" stroke-width="2" stroke-opacity="0.7"/>
+<line x1="956.2" y1="159.5" x2="944.1" y2="152.5" stroke="#ABA59C" stroke-width="3" stroke-opacity="0.7"/>
+<line x1="976.5" y1="135.3" x2="970.1" y2="127.6" stroke="#ABA59C" stroke-width="2" stroke-opacity="0.7"/>
+<line x1="1003.9" y1="119.5" x2="1000.5" y2="110.1" stroke="#ABA59C" stroke-width="2" stroke-opacity="0.7"/>
+<line x1="1035.0" y1="114.0" x2="1035.0" y2="100.0" stroke="#ABA59C" stroke-width="3" stroke-opacity="0.7"/>
+<line x1="1066.1" y1="119.5" x2="1069.5" y2="110.1" stroke="#ABA59C" stroke-width="2" stroke-opacity="0.7"/>
+<line x1="1093.5" y1="135.3" x2="1099.9" y2="127.6" stroke="#ABA59C" stroke-width="2" stroke-opacity="0.7"/>
+<line x1="1113.8" y1="159.5" x2="1125.9" y2="152.5" stroke="#ABA59C" stroke-width="3" stroke-opacity="0.7"/>
+<line x1="1124.6" y1="189.2" x2="1134.5" y2="187.5" stroke="#ABA59C" stroke-width="2" stroke-opacity="0.7"/>
+<line x1="1124.6" y1="220.8" x2="1134.5" y2="222.5" stroke="#ABA59C" stroke-width="2" stroke-opacity="0.7"/>
+<line x1="1113.8" y1="250.5" x2="1125.9" y2="257.5" stroke="#ABA59C" stroke-width="3" stroke-opacity="0.7"/>
+<text x="976.6" y="240.5" fill="#3DD68C" font-family="-apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans CJK SC', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="18" font-weight="700" text-anchor="middle">开</text>
+<text x="1093.4" y="240.5" fill="#FF8A3D" font-family="-apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans CJK SC', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="18" font-weight="700" text-anchor="middle">关</text>
+<line x1="1035" y1="205" x2="1118.7" y2="219.8" stroke="#F4F1EC" stroke-width="6" stroke-linecap="round"/>
+<circle cx="1035" cy="205" r="16" fill="#FF8A3D"/><circle cx="1035" cy="205" r="6" fill="#131417"/>
+<path d="M 1023.8 269.1 A 14.8 14.8 0 1 0 1046.2 269.1" fill="none" stroke="#ABA59C" stroke-width="2.9" stroke-linecap="round"/>
+<line x1="1035" y1="261.9" x2="1035" y2="276.3" stroke="#ABA59C" stroke-width="2.9" stroke-linecap="round"/>
+</svg>

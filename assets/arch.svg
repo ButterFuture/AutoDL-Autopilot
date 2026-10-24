@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="500" viewBox="0 0 1280 500" role="img" aria-labelledby="t d">
+<title id="t">arch</title>
+<desc id="d">Architecture: you tell the AI; the AI calls autopilot on your computer through the skill; autopilot checks the budget and the ledger, powers the instance and reads the bills through the console API, and runs jobs over SSH; the guard on the instance shuts it down when idle.</desc>
+<defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#131417"/><stop offset="1" stop-color="#1F2126"/></linearGradient></defs>
+<rect x="1" y="1" width="1278" height="498" rx="24" fill="url(#bg)" stroke="#FFFFFF" stroke-opacity="0.10"/>
+<rect x="40" y="190" width="170" height="100" rx="18" fill="#ABA59C" fill-opacity="0.07" stroke="#ABA59C" stroke-width="2"/>
+<circle cx="90" cy="240.0" r="38" fill="#ABA59C" fill-opacity="0.10"/>
+<circle cx="90" cy="240.0" r="28" fill="#131417" stroke="#ABA59C" stroke-width="3"/>
+<circle cx="90" cy="234.8" r="5.6" fill="none" stroke="#ABA59C" stroke-width="1.7"/>
+<path d="M 79.6 251.3 Q 90.0 239.1 100.4 251.3" fill="none" stroke="#ABA59C" stroke-width="1.7" stroke-linecap="round"/>
+<text x="136" y="247.0" fill="#F4F1EC" font-family="-apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans CJK SC', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="20" font-weight="600" text-anchor="start">You</text>
+<rect x="250" y="190" width="250" height="100" rx="18" fill="#FF8A3D" fill-opacity="0.07" stroke="#FF8A3D" stroke-width="2"/>
+<circle cx="300" cy="240.0" r="38" fill="#FF8A3D" fill-opacity="0.10"/>
+<circle cx="300" cy="240.0" r="28" fill="#131417" stroke="#FF8A3D" stroke-width="3"/>
+<circle cx="300" cy="240.0" r="4.9" fill="none" stroke="#FF8A3D" stroke-width="1.7"/>
+<line x1="307.8" y1="240.0" x2="313.0" y2="240.0" stroke="#FF8A3D" stroke-width="1.6" stroke-linecap="round"/>
+<line x1="305.5" y1="245.5" x2="309.2" y2="249.2" stroke="#FF8A3D" stroke-width="1.6" stroke-linecap="round"/>
+<line x1="300.0" y1="247.8" x2="300.0" y2="253.0" stroke="#FF8A3D" stroke-width="1.6" stroke-linecap="round"/>
+<line x1="294.5" y1="245.5" x2="290.8" y2="249.2" stroke="#FF8A3D" stroke-width="1.6" stroke-linecap="round"/>
+<line x1="292.2" y1="240.0" x2="287.0" y2="240.0" stroke="#FF8A3D" stroke-width="1.6" stroke-linecap="round"/>
+<line x1="294.5" y1="234.5" x2="290.8" y2="230.8" stroke="#FF8A3D" stroke-width="1.6" stroke-linecap="round"/>
+<line x1="300.0" y1="232.2" x2="300.0" y2="227.0" stroke="#FF8A3D" stroke-width="1.6" stroke-linecap="round"/>
+<line x1="305.5" y1="234.5" x2="309.2" y2="230.8" stroke="#FF8A3D" stroke-width="1.6" stroke-linecap="round"/>
+<text x="346" y="247.0" fill="#F4F1EC" font-family="-apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans CJK SC', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="20" font-weight="600" text-anchor="start">AI + skill</text>
+<rect x="530" y="190" width="280" height="100" rx="18" fill="#FF8A3D" fill-opacity="0.07" stroke="#FF8A3D" stroke-width="2"/>
+<circle cx="580" cy="240.0" r="38" fill="#FF8A3D" fill-opacity="0.10"/>
+<circle cx="580" cy="240.0" r="28" fill="#131417" stroke="#FF8A3D" stroke-width="3"/>
+<rect x="565.2" y="228.7" width="29.5" height="22.6" rx="3.1" fill="none" stroke="#FF8A3D" stroke-width="1.7"/>
+<path d="M 571.3 235.7 l 5.2 4.3 l -5.2 4.3 M 580.0 245.2 h 7.8" fill="none" stroke="#FF8A3D" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="626" y="236.0" fill="#F4F1EC" font-family="-apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans CJK SC', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="20" font-weight="600" text-anchor="start">autopilot</text>
+<text x="626" y="264.0" fill="#ABA59C" font-family="-apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans CJK SC', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="16" font-weight="500" text-anchor="start">local CLI</text>
+<rect x="530" y="360" width="280" height="100" rx="18" fill="#F5C451" fill-opacity="0.07" stroke="#F5C451" stroke-width="2"/>
+<circle cx="580" cy="410.0" r="38" fill="#F5C451" fill-opacity="0.10"/>
+<circle cx="580" cy="410.0" r="28" fill="#131417" stroke="#F5C451" stroke-width="3"/>
+<path d="M 570.5 397.0 H 589.5 V 423.0 l -3.1 -2.1 l -3.1 2.1 l -3.3 -2.1 l -3.1 2.1 l -3.1 -2.1 l -3.3 2.1 Z" fill="none" stroke="#F5C451" stroke-width="1.7" stroke-linejoin="round"/>
+<line x1="574.3" y1="403.1" x2="585.7" y2="403.1" stroke="#F5C451" stroke-width="1.6" stroke-linecap="round"/>
+<line x1="574.3" y1="407.9" x2="585.7" y2="407.9" stroke="#F5C451" stroke-width="1.6" stroke-linecap="round"/>
+<path d="M 575.7 414.3 l 3.1 3.1 l 5.6 -5.6" fill="none" stroke="#F5C451" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="626" y="417.0" fill="#F4F1EC" font-family="-apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans CJK SC', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="20" font-weight="600" text-anchor="start">Ledger</text>
+<rect x="900" y="70" width="340" height="110" rx="18" fill="#FF8A3D" fill-opacity="0.07" stroke="#FF8A3D" stroke-width="2"/>
+<circle cx="950" cy="125.0" r="38" fill="#FF8A3D" fill-opacity="0.10"/>
+<circle cx="950" cy="125.0" r="28" fill="#131417" stroke="#FF8A3D" stroke-width="3"/>
+<path d="M 939.2 115.5 A 14.2 14.2 0 1 0 960.8 115.5" fill="none" stroke="#FF8A3D" stroke-width="2.8" stroke-linecap="round"/>
+<line x1="950" y1="108.5" x2="950" y2="122.4" stroke="#FF8A3D" stroke-width="2.8" stroke-linecap="round"/>
+<text x="996" y="121.0" fill="#F4F1EC" font-family="-apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans CJK SC', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="20" font-weight="600" text-anchor="start">AutoDL console</text>
+<text x="996" y="149.0" fill="#ABA59C" font-family="-apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans CJK SC', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="16" font-weight="500" text-anchor="start">power · timer · bills</text>
+<rect x="900" y="300" width="340" height="110" rx="18" fill="#3DD68C" fill-opacity="0.07" stroke="#3DD68C" stroke-width="2"/>
+<circle cx="950" cy="355.0" r="38" fill="#3DD68C" fill-opacity="0.10"/>
+<circle cx="950" cy="355.0" r="28" fill="#131417" stroke="#3DD68C" stroke-width="3"/>
+<path d="M 950.0 337.6 L 963.9 343.7 V 355.9 Q 963.9 367.2 950.0 372.4 Q 936.1 367.2 936.1 355.9 V 343.7 Z" fill="none" stroke="#3DD68C" stroke-width="1.7" stroke-linejoin="round"/>
+<path d="M 941.3 355.0 H 946.5 L 949.1 349.8 L 952.1 359.9 L 954.3 355.0 H 958.7" fill="none" stroke="#3DD68C" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="996" y="351.0" fill="#F4F1EC" font-family="-apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans CJK SC', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="20" font-weight="600" text-anchor="start">AutoDL instance</text>
+<text x="996" y="379.0" fill="#ABA59C" font-family="-apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans CJK SC', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="16" font-weight="500" text-anchor="start">jobs · guard</text>
+<line x1="212" y1="240" x2="242" y2="240" stroke="#ABA59C" stroke-width="3" stroke-linecap="round"/>
+<polygon points="242.0,240.0 226.0,232.0 226.0,248.0" fill="#ABA59C"/>
+<line x1="502" y1="240" x2="522" y2="240" stroke="#FF8A3D" stroke-width="3" stroke-linecap="round"/>
+<polygon points="522.0,240.0 506.0,232.0 506.0,248.0" fill="#FF8A3D"/>
+<line x1="670" y1="292" x2="670" y2="352" stroke="#F5C451" stroke-width="3" stroke-dasharray="5 7" stroke-linecap="round"/>
+<path d="M 812 220 C 856 220, 850 125, 892 125" fill="none" stroke="#FF8A3D" stroke-width="4" stroke-linecap="round"/>
+<polygon points="898,125 884,117 884,133" fill="#FF8A3D"/>
+<path d="M 812 260 C 856 260, 850 355, 892 355" fill="none" stroke="#3DD68C" stroke-width="4" stroke-linecap="round"/>
+<polygon points="898,355 884,347 884,363" fill="#3DD68C"/>
+<text x="800" y="128" fill="#FF8A3D" font-family="-apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans CJK SC', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="18" font-weight="600" text-anchor="middle">console API</text>
+<text x="778" y="330" fill="#3DD68C" font-family="-apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans CJK SC', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="18" font-weight="600" text-anchor="middle">SSH</text>
+<line x1="1070" y1="182" x2="1070" y2="292" stroke="#FF8A3D" stroke-width="3" stroke-linecap="round" stroke-dasharray="6 8"/>
+<polygon points="1070.0,292.0 1078.0,276.0 1062.0,276.0" fill="#FF8A3D"/>
+</svg>

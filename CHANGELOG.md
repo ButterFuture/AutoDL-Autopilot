@@ -1,0 +1,28 @@
+# Changelog
+
+## 0.1.0 (2026-10-23)
+
+First release.
+
+- `autopilot` command line (Python 3.8+, standard library only; macOS, Linux, Windows)
+  - console API: instance status, balance, bills, power on (GPU or no-GPU), power off, timed shutdown
+  - `on`: grant and budget check, balance check, a 30-minute fallback console timer, power-on once, wait until running, start the guard over SSH, then cancel the fallback (or keep `--hard-limit`)
+  - `off`: over SSH, refused while jobs run unless `--force`; `--console --force` when SSH is down
+  - `run` / `jobs` / `tail` / `hold`, `push` / `pull`, `grant` / `check` / `sync` / `spend`, `token`, `keygen`, `doctor`
+- SSH address read from the console, host name checked before every remote command, own known_hosts
+- The key installs itself: when an instance refuses it, one login with the root password the console shows adds it to `/root/.ssh/authorized_keys`, then the command goes on with the key (`add_key`, on by default; `connect` does only this). The password goes to ssh through SSH_ASKPASS and the ssh process's environment, never a command line, file or output; checked on a real no-GPU instance
+- Instance-side guard (`autopilot/guard.sh`, bash 3.2+): busy while GPU, CPU or network use is above its threshold, during a hold, or while a whitelisted process lives; shuts down after the idle time, or after a `--then-off` job ends. A process that merely exists does not keep the instance on
+- Process whitelist with an expiry (`protect` / `unprotect` / `protected`, `run --protect`): by PID, job name or a piece of the command line, from 1 second to 90 days, kept on the data disk across power-ons
+- Guard switch: `guard_default` in the settings, `guard ID on|off|auto` per instance, `--guard` / `--no-guard` for one power-on; a change on a running instance starts or stops the guard at once
+- `market`: searches the pay-as-you-go GPU market (read only) by GPU model, region, free GPUs per machine, price per GPU-hour, CUDA version and GPU memory, cheapest or freest first; `--like ID` takes an instance's model and region; `--list gpus|regions`. The console lists the machines with free GPUs first, so the search stops after them (about 1 s instead of 16 s for the whole market); `--thorough` reads every page, and it reads on by itself when the free block has nothing that fits; checked against the real market
+- `rent`: rents a pay-as-you-go instance on a market machine. Without `--yes` only a plan (machine, GPUs, price, image, planned cost, balance); with `--yes --said` one order, a grant for the new instance, the fallback timer, then like `on` (running, key, guard, timer cancelled). The image is the newest of a framework that the machine's chip and driver run, or a given base or private image; `images` lists them. A rent without an answer is found by machine and creation time, or ends uncertain (exit 6). The plan was checked against the real market; an actual rent has not been run yet
+- Console token: environment variable, then a 0600 credentials file, then the OS credential store (5-second timeout, skipped on failure), so it works with the screen locked and over SSH
+- Budget judged from the console's own bills, per calendar month in Beijing time
+- Disclaimer (`DISCLAIMER.md`, `docs/DISCLAIMER.md`, a section in both READMEs) with the rights/takedown contact `ButterFuture@proton.me`
+- Tests: 139, run on macOS (bash 3.2) and Linux (Python 3.8 and 3.12, bash 5.2)
+
+### Not verified yet
+
+- The whole flow on a real instance over SSH (power-on with the guard, whitelist, jobs, power-off): so far only the console API (status, balance, bills, no-GPU power on and off, timer) was run against a real account; the SSH side and the guard ran against stubs and in Linux containers
+- GPU-mode power-on on a real account; the console's error codes for no free GPU and for an insufficient balance
+- Windows: the launcher, the credential store and file locking have not been run on a Windows machine

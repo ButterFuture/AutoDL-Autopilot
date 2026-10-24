@@ -1,0 +1,11 @@
+#!/bin/sh
+# Launcher for macOS, Linux and Git Bash: runs the autopilot package of this checkout with the first Python 3.8+
+# found (AUTOPILOT_PYTHON, then python3, then python).
+here=$(cd "$(dirname "$0")/.." && pwd)
+for py in ${AUTOPILOT_PYTHON:-} python3 python; do
+  if "$py" -c 'import sys; sys.exit(sys.version_info < (3, 8))' 2>/dev/null; then
+    PYTHONPATH="$here${PYTHONPATH:+:$PYTHONPATH}" exec "$py" -m autopilot "$@"
+  fi
+done
+echo "autopilot: no Python 3.8 or later found; install one or set AUTOPILOT_PYTHON" >&2
+exit 1
