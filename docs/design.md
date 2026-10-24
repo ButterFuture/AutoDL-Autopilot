@@ -52,7 +52,7 @@ SKILL.md              给 AI 的操作规程
 - **白名单**：`$AP/whitelist`，每行一条（名字、类型、值、到期时刻）。类型为 `pid`（进程号）、`job`（`autopilot run` 的任务名）或 `cmd`（命令行中的一段文字，按字面匹配，守护程序自身除外）。条目未到期且匹配的进程还活着时，实例视为忙（`protect:名字`）。时效 1 秒到 90 天，在实例上按实例的时钟计算；条目存放在数据盘，跨开机有效，到期后不再起作用，`unprotect` 删除。每次采样在 `status.json` 里列出各条目的状态：protecting、no_process、expired。
 - **保持**：`hold_until` 之前一律视为忙（用户说"先别关"，不针对某个进程）。
 - **任务跑完即关**：登记为 `then_off` 的任务结束后，宽限 `grace`（默认 2 分钟）内没有新任务就关机。
-- 连续空闲满 `idle`（默认 15 分钟）就执行 `sync` 后 `/usr/bin/shutdown`。
+- 连续空闲满 `idle` 就执行 `sync` 后 `/usr/bin/shutdown`。默认值按开机模式：有卡 15 分钟（`idle_min`），无卡 60 分钟（`idle_min_nogpu`；无卡常用来下载，下载本来就慢，空闲一小时也只花 0.1 元）；`--idle` 只管这一次。
 - 每次采样写 `status.json`（各信号读数、空闲已累计秒数、预计关机时刻），追加 `guard.log`。
 - 心跳：本机可据 `status.json` 的时间判断守护是否还活着。
 

@@ -49,8 +49,27 @@ def test_on_nogpu_full_sequence(fake, ssh, capsys):
     assert fake.writes()[0][1]["shutdown_at"] == "2026-10-23 21:31"   # 21:00:40 + 30 min, rounded up
     assert fake.writes()[1][1] == {"instance_uuid": ID, "payload": "non_gpu"}
     assert fake.writes()[2][1]["shutdown_at"] is None
-    assert ssh["deploy"] == [("connect.example.seetacloud.com", 41234, {"idle": 900, "mode": "nogpu"})]
+    assert ssh["deploy"] == [("connect.example.seetacloud.com", 41234, {"idle": 3600, "mode": "nogpu"})]
     assert got["guard"] == {"daemon_running": True} and got["timer"] is None
+
+
+def test_idle_time_follows_the_mode(fake, ssh, capsys):
+    grant(capsys)
+    assert run_cli(capsys, "on", ID, "--mode", "gpu", "--hours", "1")[0] == 0
+    assert ssh["deploy"][-1][2] == {"idle": 900, "mode": "gpu"}               # GPU: 15 minutes
+    run_cli(capsys, "off", ID)
+    assert run_cli(capsys, "on", ID, "--mode", "nogpu", "--hours", "1", "--idle", "5")[0] == 0
+    assert ssh["deploy"][-1][2]["idle"] == 300                                # --idle wins
+    run_cli(capsys, "off", ID)
+    assert run_cli(capsys, "config", "set", "idle_min_nogpu", "120")[0] == 0
+    assert run_cli(capsys, "on", ID, "--mode", "nogpu", "--hours", "1")[0] == 0
+    assert ssh["deploy"][-1][2] == {"idle": 7200, "mode": "nogpu"}            # the setting
+
+
+def test_arm_takes_the_running_mode(fake, ssh, capsys):
+    fake.inst.update(status="running", start_mode="non_gpu")
+    assert run_cli(capsys, "arm", ID)[0] == 0
+    assert ssh["deploy"][-1][2] == {"idle": 3600, "mode": "nogpu"}
 
 
 def test_on_keeps_a_hard_limit(fake, ssh, capsys):

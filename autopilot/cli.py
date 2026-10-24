@@ -23,7 +23,7 @@ EXIT_ERR, EXIT_UNREACHABLE, EXIT_REFUSED, EXIT_UNCERTAIN = 1, 2, 3, 6
 EXIT_BUDGET, EXIT_NO_GRANT, EXIT_WRONG_HOST, EXIT_TOKEN = 10, 12, 13, 14
 INSTANCE_RE = re.compile(r"^[0-9a-z]{6,16}-[0-9a-f]{6,12}\Z")
 JOB_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,63}\Z")
-DEFAULTS = {"key": "", "workdir": "/root/autodl-tmp", "env": "", "idle_min": 15, "fallback_min": 30,
+DEFAULTS = {"key": "", "workdir": "/root/autodl-tmp", "env": "", "idle_min": 15, "idle_min_nogpu": 60, "fallback_min": 30,
             "guard_default": True, "add_key": True}
 BOOL = {"true": True, "on": True, "yes": True, "1": True, "false": False, "off": False, "no": False, "0": False}
 SSH_READY_S = 180          # how long to keep trying SSH after the console says running
@@ -112,7 +112,7 @@ def cmd_config(a) -> int:
         if a.key not in DEFAULTS:
             raise ValueError(f"unknown setting {a.key!r}: one of {', '.join(DEFAULTS)}")
         value = a.value
-        if a.key in ("idle_min", "fallback_min"):
+        if a.key in ("idle_min", "idle_min_nogpu", "fallback_min"):
             value = int(value)
             if value < 1:
                 raise ValueError(f"{a.key} must be at least 1")
@@ -462,7 +462,7 @@ def cmd_rent(a) -> int:
         pass
     res["fallback_timer"] = console.stamp(fallback_at)
     try:
-        return bring_up(token, iid, a, res, fallback_at, a.idle or conf["idle_min"], t0, 900)
+        return bring_up(token, iid, a, res, fallback_at, idle_for("gpu", a.idle), t0, 900)
     except TimeoutError as e:
         out({**res, "ok": False, "error": str(e), "next": "read autopilot status ID; the image may still be loading"})
         return EXIT_ERR
@@ -538,6 +538,15 @@ def set_timer_checked(token: str, iid: str, at: int | None) -> bool:
     return console.instance(token, iid)["timer"] == want
 
 
+def idle_for(mode: str | None, flag: int | None = None) -> int:
+    """Idle minutes before the guard shuts down: --idle, else idle_min in GPU mode (15) and idle_min_nogpu in
+    no-GPU mode (60: downloads take long there, and an idle no-GPU hour costs 0.1 yuan)."""
+    if flag:
+        return flag
+    conf = settings()
+    return int(conf["idle_min_nogpu"] if mode == "nogpu" else conf["idle_min"])
+
+
 def start_guard(inst: dict, idle_min: int) -> dict:
     """Deploy and start the guard, trying SSH for a while: sshd comes up some seconds after the console says
     running."""
@@ -558,7 +567,7 @@ def cmd_on(a) -> int:
     iid = instance_id(a.instance)
     token, _ = creds.find()
     conf = settings()
-    idle_min = a.idle or conf["idle_min"]
+    idle_min = idle_for(a.mode, a.idle)
     fallback_s = 60 * (a.fallback or conf["fallback_min"])
     inst = console.instance(token, iid)
     if inst["state"] != "shutdown":
@@ -668,7 +677,7 @@ def cmd_guard(a) -> int:
         if a.action == "status":
             res["on_instance"] = remote.status(r)
         elif on:
-            res["on_instance"] = start_guard(inst, a.idle or settings()["idle_min"])
+            res["on_instance"] = start_guard(inst, idle_for(inst["mode"], a.idle))
         else:
             res["on_instance"] = remote.stop_guard(r)
     else:
@@ -745,7 +754,7 @@ def cmd_arm(a) -> int:
     if inst["state"] != "running":
         out({"ok": False, "instance": iid, "refused": f"the instance is {inst['state']}, not running"})
         return EXIT_REFUSED
-    status = start_guard(inst, a.idle or settings()["idle_min"])
+    status = start_guard(inst, idle_for(inst["mode"], a.idle))
     with State() as st:
         st.event(iid, "arm")
     out({"ok": True, "instance": iid, "guard": status})
@@ -879,7 +888,7 @@ def parser() -> argparse.ArgumentParser:
     s.add_argument("action", choices=["set", "status", "forget"])
     s.add_argument("--source", choices=["auto", "env", "file", "store"], default="auto")
     s.add_argument("--verify", action="store_true", help="status: ask the console whether it accepts the token")
-    s = add("config", cmd_config, "show or change the settings (key, add_key, workdir, env, idle_min, fallback_min, guard_default)")
+    s = add("config", cmd_config, "show or change the settings (key, add_key, workdir, env, idle_min, idle_min_nogpu, fallback_min, guard_default)")
     s.add_argument("action", choices=["show", "set"], nargs="?", default="show")
     s.add_argument("key", nargs="?")
     s.add_argument("value", nargs="?")
@@ -957,7 +966,7 @@ def parser() -> argparse.ArgumentParser:
     s.add_argument("instance")
     s.add_argument("--mode", required=True, choices=["gpu", "nogpu"])
     s.add_argument("--hours", required=True, type=float, help="planned hours, for the budget check")
-    s.add_argument("--idle", type=int, help="minutes idle before the guard shuts down")
+    s.add_argument("--idle", type=int, help="minutes idle before the guard shuts down (default: idle_min in GPU mode, idle_min_nogpu without)")
     s.add_argument("--fallback", type=int, help="minutes of the fallback timer until the guard runs")
     s.add_argument("--hard-limit", help="keep a console timer at start + this (e.g. 8h): a stop that cuts jobs")
     g = s.add_mutually_exclusive_group()

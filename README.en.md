@@ -16,7 +16,7 @@
 
 <p align="center"><img src="assets/demo.svg" alt="One run: budget check, power-on, the job, shutdown, bookkeeping; 8 min 47 s, 0.14 yuan" width="830"></p>
 
-- **No idle billing**: the instance shuts down when the job ends or it sits idle, even if the conversation is gone.
+- **No idle billing**: the instance shuts down when the job ends or it sits idle (15 minutes in GPU mode, 60 without a GPU, where downloads take their time), even if the conversation is gone.
 - **No browser**: power, the shutdown timer and the bills all go through the console API, in seconds.
 - **Know what you spend**: every power-on passes a budget gate, and the ledger comes from the console's own bills.
 - **Move data without powering on**: upload, download and delete on the file storage (文件存储) go through the console while the instance is off, paying neither GPU nor no-GPU hours.
