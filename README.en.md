@@ -19,6 +19,7 @@
 - **No idle billing**: the instance shuts down when the job ends or it sits idle, even if the conversation is gone.
 - **No browser**: power, the shutdown timer and the bills all go through the console API, in seconds.
 - **Know what you spend**: every power-on passes a budget gate, and the ledger comes from the console's own bills.
+- **Move data without powering on**: upload, download and delete on the file storage (文件存储) go through the console while the instance is off, paying neither GPU nor no-GPU hours.
 - **Find and rent a machine**: searches the GPU market by model, region, free GPUs, price and CUDA version (about a second); when your host has no free GPU it lists other machines with the same model; then rents the one you chose, never without your yes.
 
 <a id="start"></a>
@@ -53,6 +54,7 @@ The AI makes a dedicated SSH key and puts its public half on the instance at the
 | upload the data, then shut down | powers on without GPU (0.1 yuan an hour), uploads, shuts down, books |
 | how much budget is left this month | reads the local ledger, no power-on |
 | any free 4090 in 内蒙 under 2 yuan? | searches the GPU market, lists machines with free GPUs by price |
+| upload the data folder to the 内蒙 file storage | uploads it with the instance off; instances see it under `/root/autodl-fs` |
 | rent the first one, two GPUs | shows a plan first (machine, price, image, planned cost); rents only after you agree, then sets up the guard as usual |
 
 <a id="how"></a>

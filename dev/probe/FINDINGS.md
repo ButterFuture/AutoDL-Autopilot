@@ -65,6 +65,17 @@
 - 失败码（网页里的处理）：`MachineGpuNumUpdateFailed`（空闲卡不足）、`TORecharge`（余额不足）、`TORealName`（需实名）、`OrderUnpaidMoreThanThree`。
 - 基础镜像：`POST /api/v1/image/get {}`，每项 `uuid`、`framework_name`、`framework_version`、`python_version`、`cuda_version`、`chip_corp`、`cpu_arch`、`is_off`；账号镜像：`POST /api/v1/image/private/get {}`（`image_uuid`、`name`）。
 
+## 文件存储（2026-10-24，实测：上传、列目录、下载、删除）
+
+- 控制台：`GET /api/v1/file_storage/list` 列出各地区：`sign`、`name`、`status`（`created` / `uninitialized`）、`fs_type`（`autofs`）、`export_addr_1` + `port`（该地区的存储服务器）、`free_size`（免费额度，20 GiB）、`initialized_at`。`POST /api/v1/file_storage/init {sign}` 初始化（需绑定微信；未实测）。没有删除存储本身的接口。
+- 地区存储服务器 `https://<export_addr_1>:<port>/api/v1/file_storage`，请求头同样只要 `Authorization: <JWT>`：
+  - `GET /usage` → `current_usage`、`total`；`GET /detail` → 空间与 inode。
+  - `GET /dir/v2?dir_path=/a/b` → `[{name, size, updated_at, is_dir}]`，不存在的目录回答空列表。
+  - 上传：`POST /file`，multipart，每块 5 MiB（网页 WebUploader 的设置），字段 `id=0`、`name`、`size`、`chunks`、`chunk`、`chunk_offset`、`md5`（文件前 1 MiB 的 MD5）、`is_last`、`file_uuid`（同一文件各块相同）、`dir_path`、`filename`，文件部分名为 `file`；每块回答 `data` = 块号。目标目录不存在时自动创建。`GET /file/progress/<file_uuid>` 为进度。
+  - 下载：`POST /file/download_token {filename, dir_path}` → 令牌；`GET /download/file/<令牌>?auth=<JWT>`。**这个链接不带登录令牌也能下载**，所以 Autopilot 从不输出它。
+  - 删除：`DELETE /file {filename, dir_path}`；`DELETE /dir {dir_name, dir_path}`。
+- 实测：两块的文件上传、列目录、下载逐字节一致、删除文件与目录，根目录与用量恢复原状。
+
 ## 仍未验证
 
 - 有卡开机（`payload: "gpu"`）：主机空闲卡为 0 时的错误码与提示。

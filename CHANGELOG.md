@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- `storage`: the file storage (文件存储) of a region, through the console with every instance off: `list` the regions, `init` one (with `--yes`), `ls`, `put` a file or folder (chunked like the web page, free space checked first), `get` a file or folder, `rm` (a folder only with `--recursive`, never the root). Download links are never printed. Checked on a real account (upload, listing, download byte for byte, deletion)
+
 ## 0.1.0 (2026-10-23)
 
 First release.

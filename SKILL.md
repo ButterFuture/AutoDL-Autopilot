@@ -1,6 +1,6 @@
 ---
 name: autodl-autopilot
-description: Use when a project's experiments run on an AutoDL GPU instance and it needs powering on or off (GPU mode 有卡 or no-GPU mode 无卡), a job run on it, files moved, its budget or spending checked, or kept from billing while idle (空转, 忘关机, 自动关机); when choosing a machine on the AutoDL GPU market (算力市场, 找机器, 哪里有空闲卡, 最便宜的 4090); also before experiments, training or data transfer on such an instance, including automated experiment pipelines (自动跑实验).
+description: Use when a project's experiments run on an AutoDL GPU instance and it needs powering on or off (GPU mode 有卡 or no-GPU mode 无卡), a job run on it, files moved, its budget or spending checked, or kept from billing while idle (空转, 忘关机, 自动关机); when choosing a machine on the AutoDL GPU market (算力市场, 找机器, 哪里有空闲卡, 最便宜的 4090) or renting one; when moving files to or from AutoDL file storage (文件存储, autodl-fs, 上传数据集); also before experiments, training or data transfer on such an instance, including automated experiment pipelines (自动跑实验).
 ---
 
 # AutoDL Autopilot
@@ -15,7 +15,8 @@ You manage the user's AutoDL instance with the `autopilot` command. Every comman
 4. **Jobs through `autopilot run`.** It gives the job a name, a log and `--then-off`; the guard sees its resource use like any other process.
 5. **Do not cut jobs.** `off` refuses while jobs run (exit 3). Use `--force` (or `off --console --force` when SSH is down) only when the user agrees at that moment.
 6. **Renting needs the user's yes, every time.** `autopilot rent` without `--yes` only prints a plan; show it (machine, GPUs, price per hour, image, planned cost) and rent only after the user agrees to that plan, with `--yes --said '<their words>'`. A grant for the instance does not cover renting another one.
-7. **Nothing else in the console.** Autopilot cannot release, reset, clone, recharge or renew, and you do not do these things any other way.
+7. **Deleting stored files needs the user's yes.** `autopilot storage rm` deletes for good (no recycle bin); name what will go and delete only after the user agrees. `storage init` also only with their agreement (`--yes`).
+8. **Nothing else in the console.** Autopilot cannot release, reset, clone, recharge or renew, and you do not do these things any other way.
 
 ## First use on a computer
 
@@ -63,6 +64,15 @@ Choose the mode: no-GPU (0.1 yuan/h) for moving data, installing pure-Python pac
 - **First rent: suggest no-GPU mode for the setup.** When showing the plan, tell the user: a new instance has an empty data disk, and downloading models, datasets and packages in GPU mode pays the GPU price while the GPU sits idle. Suggest: right after the rent, `autopilot off`, then `autopilot on ID --mode nogpu` (0.1 yuan/h) for the downloads and the environment, then `off` and `on --mode gpu` to train. Say the risk too: a powered-off instance keeps no GPU, so the host may have none free when switching back (then wait, or find another with `market --like ID`); on a host with few free GPUs, starting the work in GPU mode right away can be the better choice. Let the user decide.
 - Exit 3 with `MachineGpuNumUpdateFailed`: the GPUs were taken meanwhile; search again. Exit 6: the rent got no answer and no new instance is listed: `autopilot status` in a minute, never rent again blindly.
 - Autopilot cannot migrate or clone; moving data from an old instance is the user's choice (the console's 克隆实例, or `pull` then `push`).
+
+## File storage (文件存储)
+
+File storage belongs to a region: once initialized there, every instance of that region mounts it at `/root/autodl-fs` (an instance running at the time sees it after its next power-on). It is filled and emptied from this computer through the console, with every instance off, so no GPU or no-GPU hours are paid for moving data.
+
+- `autopilot storage list`: the regions, `created` or `uninitialized`. `autopilot storage init REGION` shows what it means; `--yes` initializes (rule 7; the account must be bound to WeChat; beyond the free size it is billed by use).
+- `autopilot storage ls REGION [PATH]`, `storage put REGION <local file or folder> [REMOTE_DIR]`, `storage get REGION <remote file or folder> [LOCAL_DIR]`, `storage rm REGION PATH [--recursive]` (rule 7). REGION is a name (or part, like 内蒙), a sign, or an instance ID (its region). `put` checks the free space first; a folder goes with everything in it.
+- Prefer it for datasets and model weights: upload once while everything is off, then the instance reads `/root/autodl-fs/...` (copy hot data to the data disk `/root/autodl-tmp` if the job reads it many times). Results the user wants to keep can be written there and fetched with `storage get` after the shutdown.
+- The storage itself cannot be deleted; emptying it stops what it costs beyond the free size.
 
 ## Power off and spending
 

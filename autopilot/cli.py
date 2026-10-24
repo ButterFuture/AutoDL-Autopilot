@@ -16,7 +16,7 @@ import subprocess
 import sys
 import time
 
-from . import __version__, budget, console, creds, paths, remote
+from . import __version__, budget, console, creds, paths, remote, storage
 from .state import State, StateError
 
 EXIT_ERR, EXIT_UNREACHABLE, EXIT_REFUSED, EXIT_UNCERTAIN = 1, 2, 3, 6
@@ -468,6 +468,64 @@ def cmd_rent(a) -> int:
         return EXIT_ERR
 
 
+# ---- file storage ----
+
+def storage_region(token: str, text: str) -> dict:
+    """The file storage region for a region name (or part of one), a sign, or an instance ID (its region)."""
+    found = storage.regions(token)
+    if INSTANCE_RE.match(text or ""):
+        text = console.instance(token, text)["region"]
+    hits = pick([text], list(dict.fromkeys([r["name"] for r in found] + [r["sign"] for r in found])), "region")
+    regions = [r for r in found if r["name"] in hits or r["sign"] in hits]
+    if len(regions) != 1:
+        raise ValueError(f"{text!r} matches {', '.join(r['name'] for r in regions)}: name one region")
+    return regions[0]
+
+
+def cmd_storage(a) -> int:
+    token, _ = creds.find()
+    if a.action == "list":
+        out({"regions": storage.regions(token)})
+        return 0
+    if not a.region:
+        raise ValueError(f"storage {a.action} needs a region (a name like 内蒙B区, a sign or an instance ID)")
+    region = storage_region(token, a.region)
+    if a.action == "init":
+        if region["status"] == "created":
+            out({"ok": True, "region": region["name"], "already": True})
+            return 0
+        if not a.yes:
+            out({"ok": True, "sent": False, "region": region["name"], "free_gb": region["free_gb"],
+                 "next": "initializing needs the user's agreement (the account must be bound to WeChat; beyond "
+                         f"{region['free_gb']} GB the storage is billed): run again with --yes. Instances of the "
+                         "region that are running mount it at /root/autodl-fs after their next power-on"})
+            return 0
+        storage.init(token, region["sign"])
+        console.SLEEP(3)
+        now_status = storage_region(token, region["sign"])["status"]
+        out({"ok": now_status == "created", "region": region["name"], "status": now_status})
+        return 0 if now_status == "created" else EXIT_ERR
+    st = storage.Store(token, region)
+    args = list(a.paths or [])
+    if a.action == "ls":
+        path = args[0] if args else "/"
+        out({"region": region["name"], "path": storage.clean(path), "entries": st.ls(path), "usage": st.usage()})
+    elif a.action == "put":
+        if not args:
+            raise ValueError("storage put REGION LOCAL [REMOTE_DIR]")
+        out({"ok": True, "region": region["name"], **st.put(args[0], args[1] if len(args) > 1 else "/"),
+             "usage": st.usage(), "on_instances": "/root/autodl-fs" + storage.clean(args[1] if len(args) > 1 else "/")})
+    elif a.action == "get":
+        if not args:
+            raise ValueError("storage get REGION REMOTE [LOCAL_DIR]")
+        out({"ok": True, "region": region["name"], **st.get(args[0], args[1] if len(args) > 1 else ".")})
+    elif a.action == "rm":
+        if not args:
+            raise ValueError("storage rm REGION PATH [--recursive]")
+        out({"ok": True, "region": region["name"], **st.rm(args[0], a.recursive), "usage": st.usage()})
+    return 0
+
+
 # ---- power on and off ----
 
 def set_timer_checked(token: str, iid: str, at: int | None) -> bool:
@@ -866,6 +924,13 @@ def parser() -> argparse.ArgumentParser:
     g.add_argument("--guard", dest="guard", action="store_const", const=True, default=None)
     g.add_argument("--no-guard", dest="guard", action="store_const", const=False)
 
+    s = add("storage", cmd_storage, "file storage (文件存储) of a region: list, init, ls, put, get, rm")
+    s.add_argument("action", choices=["list", "init", "ls", "put", "get", "rm"])
+    s.add_argument("region", nargs="?", help="a region name (or part), a sign, or an instance ID")
+    s.add_argument("paths", nargs="*", help="ls [PATH]; put LOCAL [REMOTE_DIR]; get REMOTE [LOCAL_DIR]; rm PATH")
+    s.add_argument("--recursive", action="store_true", help="rm: a folder with everything in it")
+    s.add_argument("--yes", action="store_true", help="init: the user agreed")
+
     s = add("status", cmd_status, "every instance, or one; --guard adds the guard's state over SSH")
     s.add_argument("instance", nargs="?")
     s.add_argument("--guard", action="store_true")
@@ -988,6 +1053,7 @@ def main(argv=None) -> int:
     except remote.Uncertain as e:
         out({"ok": None, "uncertain": True, "error": str(e)})
         return EXIT_UNCERTAIN
-    except (ValueError, LookupError, StateError, console.ApiError, TimeoutError, RuntimeError, OSError) as e:
+    except (ValueError, LookupError, StateError, console.ApiError, storage.StorageError, TimeoutError, RuntimeError,
+            OSError) as e:
         out({"ok": False, "error": str(e)})
         return EXIT_ERR

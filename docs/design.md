@@ -84,6 +84,7 @@ SKILL.md              给 AI 的操作规程
 | `market [--gpu --region --gpus --max-price --min-cuda --min-memory --like ID --sort --all --list gpus\|regions]` | 查算力市场：按型号、地区、空闲卡数、单价、CUDA、显存筛选机器（只读，不下单） |
 | `images [--framework] [--private]` | 可用的基础镜像（或账号自己的镜像） |
 | `rent MACHINE --gpus N --hours H --budget B [--image] [--expand-disk] [--yes --said]` | 在市场的一台机器上租按量实例：不带 `--yes` 只给方案；带上则下单一次 → 记授权 → 兜底定时 → 等到运行 → 装公钥、启动守护 → 取消兜底 |
+| `storage list\|init\|ls\|put\|get\|rm REGION ...` | 文件存储：地区列表、初始化（`--yes`）、列目录、上传、下载、删除（文件夹需 `--recursive`） |
 | `connect ID` | 确认密钥能登录运行中的实例（被拒时补上公钥），给出手动登录的 ssh 命令 |
 | `doctor` | 检查 Python、ssh、令牌、密钥、目录权限 |
 
