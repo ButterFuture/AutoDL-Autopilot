@@ -422,6 +422,9 @@ def cmd_rent(a) -> int:
         return EXIT_REFUSED
     if not a.yes:
         out({"ok": True, "sent": False, "plan": plan,
+             "tip": "a new instance starts empty: suggest downloading models and data in no-GPU mode first "
+                    "(off, then on --mode nogpu at 0.1 yuan/h), then GPU mode to train; while off the GPU is "
+                    "not kept, so on a host with few free GPUs it may be gone",
              "next": "show this plan to the user; once they agree, run the same command with --yes and --said "
                      "'<their words>'. Renting starts the instance and its billing at once"})
         return 0
