@@ -55,7 +55,7 @@ def test_on_nogpu_full_sequence(fake, ssh, capsys):
 
 def test_idle_time_follows_the_mode(fake, ssh, capsys):
     grant(capsys)
-    assert run_cli(capsys, "on", ID, "--mode", "gpu", "--hours", "1")[0] == 0
+    assert run_cli(capsys, "on", ID, "--mode", "gpu", "--hours", "1", "--skip-mode-check")[0] == 0
     assert ssh["deploy"][-1][2] == {"idle": 900, "mode": "gpu"}               # GPU: 15 minutes
     run_cli(capsys, "off", ID)
     assert run_cli(capsys, "on", ID, "--mode", "nogpu", "--hours", "1", "--idle", "5")[0] == 0
@@ -96,7 +96,7 @@ def test_on_guard_failure_leaves_the_fallback_timer(fake, ssh, capsys, monkeypat
 
 def test_on_refused_over_budget(fake, ssh, capsys):
     grant(capsys, budget="1")
-    rc, got = run_cli(capsys, "on", ID, "--mode", "gpu", "--hours", "1")
+    rc, got = run_cli(capsys, "on", ID, "--mode", "gpu", "--hours", "1", "--skip-mode-check")
     assert rc == cli.EXIT_BUDGET and fake.writes() == []
 
 

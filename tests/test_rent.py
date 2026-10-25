@@ -32,7 +32,7 @@ def rent(capsys, *extra):
 
 def test_plan_sends_nothing(market, ssh, capsys):
     rc, got = rent(capsys, "--gpus", "2")
-    assert rc == 0 and got["sent"] is False and "--yes" in got["next"] and "--mode nogpu" in got["tip"]
+    assert rc == 0 and got["sent"] is False and "--yes" in got["next"] and "few free GPUs" in got["tip"]
     plan = got["plan"]
     assert plan["price_yuan_h"] == 2.28 and plan["planned_yuan"] == 4.56 and plan["gpus"] == 2
     assert plan["image"]["uuid"] == "base-image-mid"            # the newest PyTorch the driver (CUDA 12.4) runs

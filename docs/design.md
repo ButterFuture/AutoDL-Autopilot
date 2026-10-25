@@ -85,7 +85,7 @@ SKILL.md              给 AI 的操作规程
 | `images [--framework] [--private]` | 可用的基础镜像（或账号自己的镜像） |
 | `rent MACHINE --gpus N --hours H --budget B [--image] [--expand-disk] [--yes --said]` | 在市场的一台机器上租按量实例：不带 `--yes` 只给方案；带上则下单一次 → 记授权 → 兜底定时 → 等到运行 → 装公钥、启动守护 → 取消兜底 |
 | `disk ID [--add GB \| --remove GB \| --remove-all] [--yes --said]` | 数据盘：查看；扩容或缩容先给方案（扩容后的大小、日价、何时生效），带 `--yes` 才下单。运行中扩容需重启才生效；缩容只能在关机时、按量计费实例 |
-| `storage list\|init\|ls\|put\|get\|rm REGION ...` | 文件存储：地区列表、初始化（`--yes`）、列目录、上传、下载、删除（文件夹需 `--recursive`）。`on` 和 `rent --yes` 开机前先查该地区的文件存储，未初始化就不发请求，提示先初始化（`--without-storage` 跳过，`storage_check false` 关掉检查） |
+| `storage list\|init\|ls\|put\|get\|rm REGION ...` | 文件存储：地区列表、初始化（`--yes`）、列目录、上传、下载、删除（文件夹需 `--recursive`）。`on` 和 `rent --yes` 开机前先查该地区的文件存储，未初始化就不发请求，提示先初始化（`--without-storage` 跳过，`storage_check false` 关掉检查）。`on` 还按宿主机空闲卡拦截不合适的模式：多出所需的空闲卡少于 `spare_gpus`（默认 2）时拦无卡模式（卡会被抢，应有卡开、在有卡模式下载），多于等于时拦有卡模式（应先无卡下载）；`--skip-mode-check` 忽略一次，`mode_check false` 关掉 |
 | `connect ID` | 确认密钥能登录运行中的实例（被拒时补上公钥），给出手动登录的 ssh 命令 |
 | `doctor` | 检查 Python、ssh、令牌、密钥、目录权限 |
 

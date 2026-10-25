@@ -24,7 +24,7 @@ EXIT_BUDGET, EXIT_NO_GRANT, EXIT_WRONG_HOST, EXIT_TOKEN = 10, 12, 13, 14
 INSTANCE_RE = re.compile(r"^[0-9a-z]{6,16}-[0-9a-f]{6,12}\Z")
 JOB_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,63}\Z")
 DEFAULTS = {"key": "", "workdir": "/root/autodl-tmp", "env": "", "idle_min": 15, "idle_min_nogpu": 60, "fallback_min": 30,
-            "guard_default": True, "add_key": True, "storage_check": True}
+            "guard_default": True, "add_key": True, "storage_check": True, "mode_check": True, "spare_gpus": 2}
 BOOL = {"true": True, "on": True, "yes": True, "1": True, "false": False, "off": False, "no": False, "0": False}
 SSH_READY_S = 180          # how long to keep trying SSH after the console says running
 NOW = time.time            # replaced in tests
@@ -112,11 +112,11 @@ def cmd_config(a) -> int:
         if a.key not in DEFAULTS:
             raise ValueError(f"unknown setting {a.key!r}: one of {', '.join(DEFAULTS)}")
         value = a.value
-        if a.key in ("idle_min", "idle_min_nogpu", "fallback_min"):
+        if a.key in ("idle_min", "idle_min_nogpu", "fallback_min", "spare_gpus"):
             value = int(value)
             if value < 1:
                 raise ValueError(f"{a.key} must be at least 1")
-        if a.key in ("guard_default", "add_key", "storage_check"):
+        if a.key in ("guard_default", "add_key", "storage_check", "mode_check"):
             if str(value).lower() not in BOOL:
                 raise ValueError(f"{a.key}: true or false")
             value = BOOL[str(value).lower()]
@@ -439,10 +439,12 @@ def cmd_rent(a) -> int:
         if fs:
             plan["storage"] = {**fs, "note": storage_refusal(fs)["refused"] + f"; autopilot storage init "
                                f"{fs['sign']} before renting, or rent with --without-storage"}
-        out({"ok": True, "sent": False, "plan": plan,
-             "tip": "a new instance starts empty: suggest downloading models and data in no-GPU mode first "
-                    "(off, then on --mode nogpu at 0.1 yuan/h), then GPU mode to train; while off the GPU is "
-                    "not kept, so on a host with few free GPUs it may be gone",
+        few = (spare_gpus(m["gpu_free"], a.gpus) or 0) < conf["spare_gpus"]
+        tip = ("its host has few free GPUs: suggest staying in GPU mode and downloading there too, since while it "
+               "is off or without GPU the GPUs can be taken" if few else
+               "a new instance starts empty and its host has free GPUs to spare: suggest downloading models and "
+               "data in no-GPU mode first (off, then on --mode nogpu at 0.1 yuan/h), then GPU mode to train")
+        out({"ok": True, "sent": False, "plan": plan, "tip": tip,
              "next": "show this plan to the user; once they agree, run the same command with --yes and --said "
                      "'<their words>'. Renting starts the instance and its billing at once"})
         return 0
@@ -605,6 +607,34 @@ def storage_unready(token: str, region: str, skip: bool) -> dict | None:
     return fs if fs["status"] == "uninitialized" else None
 
 
+def spare_gpus(idle, gpus: int) -> int | None:
+    """Free GPUs on the host beyond what the instance needs, or None when the console did not say."""
+    return None if idle is None else int(idle) - gpus
+
+
+def mode_refusal(inst: dict, mode: str, skip: bool) -> dict | None:
+    """Why this mode is the wrong one for the host's free GPUs now, or None (also with --skip-mode-check, or
+    mode_check off). Few spare GPUs (under spare_gpus): no-GPU mode leaves them to others, so stay in GPU mode.
+    Many: there is no hurry for a GPU, so download models and data in no-GPU mode first."""
+    conf = settings()
+    spare = spare_gpus(inst["gpu_idle"], inst["gpus"])
+    if skip or not conf["mode_check"] or spare is None or inst["gpus"] < 1:
+        return None
+    free = f"its host has {inst['gpu_idle']} free GPUs ({inst['gpus']} needed)"
+    again = "; if this mode is meant all the same, run this again with --skip-mode-check"
+    if mode == "nogpu" and 0 <= spare < conf["spare_gpus"]:
+        return {"refused": f"{free}: few, and while it runs without GPU they can be taken, so switching to GPU mode "
+                           "later may find none",
+                "next": "power on with --mode gpu and do the downloads there too" + again
+                        + " (for example when GPU mode is not needed soon)"}
+    if mode == "gpu" and spare >= conf["spare_gpus"]:
+        return {"refused": f"{free}: plenty, so no hurry for a GPU; downloading models, data or packages in GPU mode "
+                           "pays the GPU price while it sits idle",
+                "next": "if anything still needs downloading or installing, power on with --mode nogpu first (0.1 "
+                        "yuan/h), then off and on --mode gpu" + again + " (for example when the data is ready)"}
+    return None
+
+
 def storage_refusal(fs: dict) -> dict:
     return {"refused": f"file storage in {fs['region']} is not initialized: an instance mounts /root/autodl-fs only "
                        "when it starts, so initializing it later means powering off and on again",
@@ -713,6 +743,10 @@ def cmd_on(a) -> int:
     if a.mode == "gpu" and not inst["gpu_free"]:
         out({"ok": False, "instance": iid, "sent": False, "refused": f"no free GPU on its host ({inst['gpu_idle']} "
              f"idle, {inst['gpus']} needed): wait and try again, or use no-GPU mode if the task allows"})
+        return EXIT_REFUSED
+    wrong = mode_refusal(inst, a.mode, a.skip_mode_check)
+    if wrong:
+        out({"ok": False, "instance": iid, "sent": False, "mode": a.mode, **wrong})
         return EXIT_REFUSED
     verdict = judge(token, inst, a.mode, a.hours)
     if not verdict["ok"]:
@@ -1031,7 +1065,7 @@ def parser() -> argparse.ArgumentParser:
     s.add_argument("action", choices=["set", "status", "forget"])
     s.add_argument("--source", choices=["auto", "env", "file", "store"], default="auto")
     s.add_argument("--verify", action="store_true", help="status: ask the console whether it accepts the token")
-    s = add("config", cmd_config, "show or change the settings (key, add_key, workdir, env, idle_min, idle_min_nogpu, fallback_min, guard_default, storage_check)")
+    s = add("config", cmd_config, "show or change the settings (key, add_key, workdir, env, idle_min, idle_min_nogpu, fallback_min, guard_default, storage_check, mode_check, spare_gpus)")
     s.add_argument("action", choices=["show", "set"], nargs="?", default="show")
     s.add_argument("key", nargs="?")
     s.add_argument("value", nargs="?")
@@ -1124,6 +1158,8 @@ def parser() -> argparse.ArgumentParser:
     s.add_argument("--hard-limit", help="keep a console timer at start + this (e.g. 8h): a stop that cuts jobs")
     s.add_argument("--without-storage", action="store_true",
                    help="power on although the region's file storage is not initialized")
+    s.add_argument("--skip-mode-check", action="store_true",
+                   help="power on in this mode although the host's free GPUs suggest the other one")
     g = s.add_mutually_exclusive_group()
     g.add_argument("--guard", dest="guard", action="store_true", default=None,
                    help="start the guard this time, whatever the setting")

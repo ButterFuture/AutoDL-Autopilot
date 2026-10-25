@@ -32,7 +32,7 @@ class Resp(io.BytesIO):
 
 
 def instance_record(**over):
-    it = {"uuid": ID, "status": "shutdown", "start_mode": "non_gpu", "req_gpu_amount": 1, "gpu_idle_num": 2,
+    it = {"uuid": ID, "status": "shutdown", "start_mode": "non_gpu", "req_gpu_amount": 1, "gpu_idle_num": 4,
           "gpu_all_num": 8, "payg_price": 1140, "charge_type": "payg",
           "timed_shutdown_at": {"Time": "0001-01-01T00:00:00Z", "Valid": False},
           "started_at": {"Time": "2026-10-23T20:00:00+08:00", "Valid": True},
