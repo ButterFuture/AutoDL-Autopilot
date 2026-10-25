@@ -3,6 +3,7 @@ for the new instance, the fallback timer, the guard, and the timer cancelled. Ag
 import pytest
 
 from autopilot import cli, console, remote
+from autopilot.state import State
 from conftest import market_record, run_cli
 
 NEW = "newinst001-0a1b2c3d"
@@ -60,6 +61,23 @@ def test_refused_without_free_gpus_or_over_budget(market, ssh, capsys):
     rc, got = rent(capsys, "--yes", "--said", "ok")
     assert rc == cli.EXIT_REFUSED and "balance" in got["refused"]
     assert market.writes() == []
+
+
+def test_member_plan_and_budget_use_the_member_price(market, ssh, capsys):
+    market.machines = [market_record("m1", idle=2, li=1140, cuda="12.4", member_li=1083)]
+    market.level = "member_user"
+    rc, got = rent(capsys, "--gpus", "2")
+    plan = got["plan"]
+    assert plan["price_yuan_h"] == 2.16 and plan["list_price_yuan_h"] == 2.28 and plan["planned_yuan"] == 4.32
+    assert "member_user" in plan["prices"]
+    # 10 hours on two GPUs: 21.60 yuan for a member, 22.80 at the list price
+    rc, got = run_cli(capsys, "rent", "m1", "--gpus", "2", "--hours", "10", "--budget", "22", "--yes", "--said", "ok")
+    assert rc == 0, got
+    with State() as st:
+        assert [e["price_fen_h"] for e in st.data["events"] if e["event"] in ("rent", "on")] == [216, 216]
+    market.level = "normal_user"
+    rc, got = run_cli(capsys, "rent", "m1", "--gpus", "2", "--hours", "10", "--budget", "22")
+    assert rc == cli.EXIT_BUDGET and got["plan"]["price_yuan_h"] == 2.28
 
 
 def test_yes_needs_the_users_words(market, ssh, capsys):

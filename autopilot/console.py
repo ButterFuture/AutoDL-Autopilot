@@ -2,8 +2,8 @@
 
 This is the API the console's own web page uses, not a documented public one; the requests and answers were
 checked on a real account (dev/probe/FINDINGS.md). Only the requests in ENDPOINTS are ever sent: reading the
-instance list, the balance, the billing detail, the server time, the GPU market (machines, regions, GPU models)
-and the images; renting one pay-as-you-go instance on a market machine; adding data disk space to an instance or
+instance list, the balance, the billing detail, the server time, the account's member level, the GPU market
+(machines, regions, GPU models) and the images; renting one pay-as-you-go instance on a market machine; adding data disk space to an instance or
 taking it away; powering on (with or without GPU) and off; setting or cancelling the timed shutdown. Nothing here
 can release, reset, clone, migrate, renew or recharge.
 
@@ -31,6 +31,7 @@ RELEASE_DAYS = 15       # an instance shut down this long is released by the pla
 ENDPOINTS = {
     "time": ("GET", "/api/v1/time_sync", False),
     "balance": ("GET", "/api/v1/wallet/balance", False),
+    "level": ("GET", "/api/v1/user/level", False),            # the account's member level, which sets its prices
     "instances": ("POST", "/api/v1/instance", False),        # a list query the console sends as POST
     "bills": ("POST", "/api/v1/bill/balance_statement/list", False),
     "market": ("POST", "/api/v1/user/machine/list", False),     # the market's machine list, also a POST query
@@ -111,6 +112,15 @@ def server_time(token: str) -> int:
 def balance_fen(token: str) -> int:
     data = request(token, "balance", {"charge_type": "payg", "product_type": "instance"}) or {}
     return int(data.get("assets") or 0) // 10
+
+
+def level(token: str) -> str | None:
+    """The account's member level as the console names it (normal_user, member_user, ...), or None when it
+    cannot be read."""
+    try:
+        return str(request(token, "level") or "") or None
+    except (ApiError, NoAnswer):
+        return None
 
 
 def records(token: str) -> list:
@@ -212,8 +222,22 @@ def gpu_models(token: str) -> list:
              "series": g.get("gpu_series_type")} for g in found]
 
 
-def machine(m: dict) -> dict:
-    """A market machine as Autopilot shows it: what matters for choosing one, nothing about its network."""
+def payg_li(m: dict, level: str | None) -> int:
+    """A market machine's pay-as-you-go price per GPU-hour in li for an account of that level. The market lists
+    the list price (payg_price) and, in machine_sku_info, the price for each level (members pay 95%); the console
+    bills that price rounded to the fen (1577 li is billed as 1580). The list price for a level it does not name."""
+    for sku in m.get("machine_sku_info") or []:
+        if sku.get("type") != "payg":
+            continue
+        for c in sku.get("level_config") or []:
+            if level and c.get("level_name") == level and c.get("discounted_price"):
+                return round(int(c["discounted_price"]) / 10) * 10
+    return int(m.get("payg_price") or 0)
+
+
+def machine(m: dict, level: str | None = None) -> dict:
+    """A market machine as Autopilot shows it: what matters for choosing one, nothing about its network. Its
+    price is the one an account of that level pays."""
     idle, total = int(m.get("gpu_idle_num") or 0), int(m.get("gpu_number") or 0)
     slots = int(m.get("max_instance_num") or 0) - int(m.get("binding_instance_num") or 0)
     return {
@@ -225,7 +249,8 @@ def machine(m: dict) -> dict:
         "gpu_memory_gb": round(int(m.get("gpu_memory") or 0) / GIB),
         "gpu_free": idle,
         "gpu_total": total,
-        "price_yuan_h": int(m.get("payg_price") or 0) / 1000,      # per GPU, pay as you go
+        "price_yuan_h": payg_li(m, level) / 1000,                  # per GPU, pay as you go, at the level's price
+        "list_price_yuan_h": int(m.get("payg_price") or 0) / 1000,
         "cuda": m.get("highest_cuda_version"),
         "cpu_per_gpu": m.get("cpu_per_gpu"),
         "mem_per_gpu_gb": round(int(m.get("mem_per_gpu") or 0) / GIB),
@@ -251,15 +276,16 @@ def market_query(page: int, gpus=(), region_signs=(), need: int = 0, machine_id:
     return body
 
 
-def market(token: str, gpus=(), region_signs=(), need: int = 0, early: bool = False, max_pages: int = 40) -> tuple:
+def market(token: str, gpus=(), region_signs=(), need: int = 0, early: bool = False, max_pages: int = 40,
+           level: str | None = None) -> tuple:
     """(machines, how) on the pay-as-you-go market, filtered by GPU model names and region signs on the console's
-    side. how is "all" when every page was read, "early" when reading stopped at the first page without a
+    side, priced for an account of that level. how is "all" when every page was read, "early" when reading stopped at the first page without a
     rentable machine having need free GPUs (early=True; the console lists those first, so only machines freed
     in the last minutes can be missed), "capped" when max_pages ran out."""
     found = []
     for page in range(1, max_pages + 1):
         data = request(token, "market", market_query(page, gpus, region_signs, need)) or {}
-        got = [machine(m) for m in data.get("list") or []]
+        got = [machine(m, level) for m in data.get("list") or []]
         found += got
         if page >= int(data.get("max_page") or 1):
             return found, "all"
@@ -268,12 +294,12 @@ def market(token: str, gpus=(), region_signs=(), need: int = 0, early: bool = Fa
     return found, "capped"
 
 
-def market_machine(token: str, machine_id: str) -> dict:
-    """One market machine, read fresh (free GPUs change by the minute)."""
+def market_machine(token: str, machine_id: str, level: str | None = None) -> dict:
+    """One market machine, read fresh (free GPUs change by the minute), priced for an account of that level."""
     data = request(token, "market", market_query(1, machine_id=machine_id)) or {}
     for m in data.get("list") or []:
         if m.get("machine_id") == machine_id:
-            return machine(m)
+            return machine(m, level)
     raise LookupError(f"machine {machine_id} is not on the pay-as-you-go market")
 
 

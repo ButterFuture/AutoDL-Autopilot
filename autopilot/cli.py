@@ -292,6 +292,13 @@ def fits(m: dict, a, need: int) -> bool:
             and (a.min_memory is None or m["gpu_memory_gb"] >= a.min_memory))
 
 
+def price_basis(level: str | None) -> str:
+    """Which prices the market and rent show: the account's own, or the list price when its level is unknown."""
+    if level is None:
+        return "list prices: the account's member level could not be read (a member pays less)"
+    return f"the prices this account pays (member level {level})"
+
+
 def cmd_market(a) -> int:
     token, _ = creds.find()
     if a.list == "gpus":
@@ -316,9 +323,10 @@ def cmd_market(a) -> int:
                     "region")
         signs = [r["sign"] for r in regions if r["name"] in hits or r["sign"] in hits]
     need = 0 if a.all else a.gpus
-    machines, how = console.market(token, gpus, signs, need, early=not (a.thorough or a.all))
+    level = console.level(token)
+    machines, how = console.market(token, gpus, signs, need, early=not (a.thorough or a.all), level=level)
     if how == "early" and not any(fits(m, a, need) for m in machines):      # nothing in the free block: read on
-        machines, how = console.market(token, gpus, signs, need)
+        machines, how = console.market(token, gpus, signs, need, level=level)
     rows = [m for m in machines if fits(m, a, need)]
     if a.sort == "free":
         rows.sort(key=lambda m: (-m["gpu_free"], m["price_yuan_h"]))
@@ -328,6 +336,7 @@ def cmd_market(a) -> int:
                                    "free_gpus_at_least": None if a.all else a.gpus, "max_price_yuan_h": a.max_price,
                                    "min_cuda": a.min_cuda, "min_gpu_memory_gb": a.min_memory, "sort": a.sort},
            "scanned": len(machines), "read": how, "found": len(rows), "machines": rows[:a.limit],
+           "prices": price_basis(level),
            "note": "prices are per GPU per hour, pay as you go; free GPUs change by the minute. Rent one with "
                    "autopilot rent MACHINE --gpus N ... (a plan first, --yes to rent)"}
     if how == "early":
@@ -394,9 +403,11 @@ def cmd_rent(a) -> int:
         raise ValueError("--gpus: at least 1")
     token, _ = creds.find()
     conf = settings()
-    m = console.market_machine(token, a.machine)
+    level = console.level(token)
+    m = console.market_machine(token, a.machine, level)
     plan = {"machine": a.machine, "region": m["region"], "host_name": m["host_name"], "gpu_model": m["gpu_model"],
             "gpus": a.gpus, "gpu_free_now": m["gpu_free"], "price_yuan_h": round(m["price_yuan_h"] * a.gpus, 3),
+            "list_price_yuan_h": round(m["list_price_yuan_h"] * a.gpus, 3), "prices": price_basis(level),
             "hours": a.hours, "planned_yuan": round(m["price_yuan_h"] * a.gpus * a.hours, 2),
             "data_disk_gb": m["data_disk_gb"] + a.expand_disk, "cuda": m["cuda"]}
     if not m["rentable"] or m["gpu_free"] < a.gpus:

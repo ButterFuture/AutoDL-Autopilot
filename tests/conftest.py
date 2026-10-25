@@ -45,8 +45,15 @@ def instance_record(**over):
 
 
 def market_record(mid, gpu="RTX 4090", region=("内蒙B区", "nm-B1"), idle=1, total=8, li=2290, on_line=2,
-                  cuda="13.2", slots=10, memory_gib=24):
-    return {"machine_id": mid, "region_name": region[0], "region_sign": region[1], "machine_alias": f"{mid}机",
+                  cuda="13.2", slots=10, memory_gib=24, member_li=None):
+    """member_li: also list the member price per GPU-hour, as the market does (machine_sku_info)."""
+    sku = [] if member_li is None else [
+        {"type": "payg", "current_price": li, "level_config": [
+            {"level_name": "normal_user", "discount": 100, "discounted_price": li},
+            {"level_name": "member_user", "discount": 95, "discounted_price": member_li}]},
+        {"type": "daily", "current_price": li * 23, "level_config": [
+            {"level_name": "member_user", "discount": 95, "discounted_price": li * 22}]}]
+    return {"machine_id": mid, "machine_sku_info": sku, "region_name": region[0], "region_sign": region[1], "machine_alias": f"{mid}机",
             "gpu_name": gpu, "gpu_memory": memory_gib << 30, "gpu_idle_num": idle, "gpu_number": total,
             "payg_price": li, "highest_cuda_version": cuda, "cpu_per_gpu": 16, "mem_per_gpu": 120 << 30,
             "max_instance_disk_size": 50 << 30, "max_data_disk_expand_size": 113 << 30, "on_line": on_line,
@@ -92,6 +99,7 @@ class FakeConsole:
         self.bills = []
         self.server = T0
         self.balance_li = 41270
+        self.level = "normal_user"
         self.calls = []
         self.fail = {}
         self.token_ok = True
@@ -123,6 +131,8 @@ class FakeConsole:
             return self.answer("Success", self.server)
         if path == "/api/v1/wallet/balance":
             return self.answer("Success", {"assets": self.balance_li, "voucher_balance": 0})
+        if path == "/api/v1/user/level":
+            return self.answer("Success", self.level)
         if path == "/api/v1/instance":
             return self.answer("Success", {"list": [self.inst], "max_page": 1})
         if path == "/api/v1/bill/balance_statement/list":

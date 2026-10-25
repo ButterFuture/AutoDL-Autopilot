@@ -59,6 +59,13 @@
 - 市场页判断"可租"：`on_line` 不在 3、4、5、6，`gpu_idle_num > 0`，`max_instance_num > binding_instance_num`。
 - 每行的 `machine_base_info` 含主机内网 IP 等，Autopilot 不输出。
 
+## 会员价（2026-10-25，只读实测）
+
+- `GET /api/v1/user/level` → `data` 是等级名字符串，如 `member_user`、`normal_user`。`GET /api/v1/user/member/detail` 有详情（`member_level`、`level_acq_mode: vip_student`、`student_deadline` 等），Autopilot 不用。
+- 市场每行的 `payg_price` 是**原价**（普通用户价）。各等级的价在 `machine_sku_info`：`type: "payg"` 那项的 `level_config: [{level_name, discount, discounted_price}]`，`member_user` 是 95 折。网页（`service-code` 的价格计算）也是按 `user/level` 在 `level_config` 里挑同名一项。
+- 实例列表的 `payg_price` 已经是账号自己的价，且按分取整：同一台机器原价 1660、会员价 1577，实例记 1580，账单每整小时扣 1580；另一台原价 1140、会员价 1083，实例记 1080。所以 Autopilot 把会员价四舍五入到 10 厘。
+- 只核对过单卡实例；多卡实例的 `payg_price` 是每卡还是整台，还没核对。
+
 ## 租用（2026-10-24，从网页脚本读出，**未实际下单**）
 
 - `POST /api/v1/order/instance/create/payg`，请求体 `{instance_info: {machine_id, charge_type: "payg", req_gpu_amount, base_image_uuid | private_image_uuid, expand_data_disk（字节）, …}, price_info: {coupon_id_list: [], machine_id, charge_type, duration: 1, num, expand_data_disk}}`；成功时 `data` 是新实例 ID，网页随后用 `GET /api/v1/instance/exist?instance_uuid=` 等它出现。

@@ -19,6 +19,32 @@ def test_finds_rentable_machines_cheapest_first(fake, capsys):
     assert fake.writes() == []
 
 
+def test_prices_follow_the_member_level(fake, capsys):
+    # a vGPU-32GB host on a real account: list price 1660 li, a member pays 95%, 1577, billed as 1580
+    fake.machines = [market_record("v", li=1660, member_li=1577), market_record("x", li=1600)]
+    fake.level = "member_user"
+    rc, got = run_cli(capsys, "market")
+    m = {r["id"]: r for r in got["machines"]}
+    assert m["v"]["price_yuan_h"] == 1.58 and m["v"]["list_price_yuan_h"] == 1.66
+    assert m["x"]["price_yuan_h"] == 1.6                  # no price listed for the level: the list price
+    assert ids(got) == ["v", "x"] and "member_user" in got["prices"]
+    assert ids(run_cli(capsys, "market", "--max-price", "1.59")[1]) == ["v"]
+    fake.level = "normal_user"
+    rc, got = run_cli(capsys, "market")
+    assert ids(got) == ["x", "v"] and got["machines"][1]["price_yuan_h"] == 1.66
+    fake.fail["/api/v1/user/level"] = ("Unknown", "")
+    rc, got = run_cli(capsys, "market")
+    assert rc == 0 and got["machines"][1]["price_yuan_h"] == 1.66 and "could not be read" in got["prices"]
+    assert fake.writes() == []
+
+
+def test_member_price_rounds_to_the_fen():
+    assert console.payg_li(market_record("a", li=1140, member_li=1083), "member_user") == 1080
+    assert console.payg_li(market_record("a", li=1660, member_li=1577), "member_user") == 1580
+    assert console.payg_li(market_record("a", li=1660, member_li=1577), None) == 1660
+    assert console.payg_li(market_record("a", li=1660, member_li=1577), "member_level_9") == 1660
+
+
 def test_partial_names_and_region_names(fake, capsys):
     fake.machines = [market_record("a"), market_record("b", gpu="RTX 4090D", region=("内蒙B区", "nm-B2")),
                      market_record("c", region=("西北B区", "west-B"))]
