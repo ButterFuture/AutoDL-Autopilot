@@ -82,6 +82,8 @@ The guard runs from the instance's data disk and decides whether the instance is
 
 Before each power-on it sets a console shutdown timer 30 minutes ahead and cancels it only once the guard runs on the instance. If the conversation dies right after the power-on, the platform still shuts the instance down.
 
+The console timer shuts the instance down on time whether or not the jobs have finished. So whenever such a timer is set (`--hard-limit` at power-on, or `autopilot timer`), the AI keeps `autopilot remind` running in the background: it is told 30, 20 and 10 minutes before, with the jobs that are still running and would be cut. It then tells you and either moves the timer later, within the budget you gave, or lets the jobs save their output first.
+
 Only you store the token, in `~/.config/autodl-autopilot/credentials` (mode 0600). It works with the screen locked, asleep or over SSH, and the AI never reads or shows it.
 
 The SSH key installs itself. When the instance refuses it, autopilot logs in once with the root password the console shows and appends the key to `/root/.ssh/authorized_keys`; after that it uses the key. The password is never shown, stored or put on a command line. You can turn this off and paste the key into the console's 设置SSH免密登录 yourself.

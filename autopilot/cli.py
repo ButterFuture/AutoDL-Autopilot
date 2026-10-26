@@ -809,6 +809,8 @@ def bring_up(token: str, iid: str, a, res: dict, fallback_at: int, idle_min: int
                           "autopilot off" + (" or the hard limit" if a.hard_limit else ""))
     final = None if a.hard_limit is None else (inst["started_at"] or t0) + duration_s(a.hard_limit)
     res["timer"] = console.stamp(final) if final else None
+    if final:
+        res["remind"] = REMIND_NOTE.format(iid=iid)
     if not set_timer_checked(token, iid, final):
         res["warning"] = "the console timer could not be changed after the guard started; check autopilot status"
     out(res)
@@ -974,8 +976,117 @@ def cmd_timer(a) -> int:
     token, _ = creds.find()
     at = None if a.cancel else console.server_time(token) + duration_s(a.in_)
     ok = set_timer_checked(token, iid, at)
-    out({"ok": ok, "instance": iid, "timer": console.stamp(-(-at // 60) * 60) if at else None})
+    out({"ok": ok, "instance": iid, "timer": console.stamp(-(-at // 60) * 60) if at else None,
+         **({"remind": REMIND_NOTE.format(iid=iid)} if at else {})})
     return 0 if ok else EXIT_ERR
+
+
+# ---- reminders before the console timer ----
+
+_UNSEEN = object()
+REMIND_NOTE = ("the console timer cuts running jobs; to be told 30, 20 and 10 minutes before, keep "
+               "`autopilot remind {iid}` running in the background")
+
+
+def remind_marks(text: str) -> list:
+    """'30,20,10' -> [30, 20, 10] (minutes before the timer, largest first)."""
+    try:
+        marks = sorted({int(x) for x in text.split(",") if x.strip()}, reverse=True)
+    except ValueError:
+        raise ValueError(f"--at {text!r}: minutes before the timer, like 30,20,10") from None
+    if not marks or marks[-1] <= 0 or marks[0] > 1440:
+        raise ValueError(f"--at {text!r}: minutes from 1 to 1440, like 30,20,10")
+    return marks
+
+
+def due_mark(left_s: int, marks: list, given: list):
+    """The reminder to give now: the nearest mark the time left has reached and that was not given yet. Starting
+    with 15 minutes left gives the 20-minute reminder once, not the 30 and the 20 one after the other."""
+    due = [m for m in marks if left_s <= m * 60 and m not in given]
+    return min(due) if due else None
+
+
+def remind_file(iid: str) -> pathlib.Path:
+    return paths.private_dir(paths.state_dir() / "remind") / f"{iid}.json"
+
+
+def remind_given(iid: str, timer: int) -> list:
+    """Marks already given for this timer, kept across runs so a restarted `remind` does not repeat them."""
+    try:
+        data = json.loads(remind_file(iid).read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return []
+    return data.get("given", []) if data.get("timer") == timer else []
+
+
+def running_jobs(inst: dict) -> list | None:
+    """Names of the jobs running on the instance, or None when SSH cannot tell."""
+    try:
+        st = remote.status(remote_for(inst))
+    except (remote.Unreachable, remote.Uncertain, RuntimeError, ValueError, OSError):
+        return None
+    return [j.get("name") for j in st.get("jobs") or [] if j.get("running")]
+
+
+def notify(cmd: str | None, msg: str) -> None:
+    """Run the user's notify command with the message in AUTOPILOT_REMINDER (never pasted into the command)."""
+    if not cmd:
+        return
+    try:
+        subprocess.run(cmd, shell=True, env={**os.environ, "AUTOPILOT_REMINDER": msg}, timeout=30,
+                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    except (OSError, subprocess.SubprocessError):
+        pass
+
+
+def cmd_remind(a) -> int:
+    """Wait for the next reminder before the console's timed shutdown (a hard limit, a fallback timer or
+    `timer --in`), print it and exit; with --follow keep going, one JSON object per line, until the instance is off."""
+    iid = instance_id(a.instance)
+    marks = remind_marks(a.at)
+    token, _ = creds.find()
+    offset = console.server_time(token) - now()
+    seen = _UNSEEN
+    while True:
+        inst = console.instance(token, iid)
+        if inst["state"] not in ("running", "starting"):
+            emit({"event": "off", "instance": iid, "state": inst["state"], "at": console.stamp(now() + offset)}, a.follow)
+            return 0
+        timer = inst["timer"]
+        if timer != seen:               # set, moved or cancelled: the marks count from the new time
+            if a.follow or timer is None:
+                emit({"event": "timer", "instance": iid, "timer": console.stamp(timer) if timer else None,
+                      "marks_min": marks}, a.follow)
+            if timer is None and not a.follow:
+                return 0
+            seen = timer
+        if timer:
+            left = timer - (now() + offset)
+            given = remind_given(iid, timer)
+            mark = due_mark(left, marks, given)
+            if mark is not None:
+                given = sorted(set(given) | {m for m in marks if m >= mark}, reverse=True)
+                remind_file(iid).write_text(json.dumps({"timer": timer, "given": given}), encoding="utf-8")
+                jobs = None if a.no_jobs else running_jobs(inst)
+                mins = max(0, -(-left // 60))
+                msg = f"{iid} shuts down at {console.stamp(timer)} by the console timer, in {mins} min"
+                if jobs:
+                    msg += f"; still running and will be cut: {', '.join(jobs)}"
+                msg += f"; to keep it on: autopilot timer {iid} --in DUR (or --cancel)"
+                emit({"event": "reminder", "instance": iid, "minutes_left": mins, "mark_min": mark,
+                      "timer": console.stamp(timer), "jobs_running": jobs, "message": msg}, a.follow)
+                notify(a.notify_cmd, msg)
+                if not a.follow:
+                    return 0
+        SLEEP(a.interval)
+
+
+def emit(obj: dict, follow: bool) -> None:
+    """One JSON object per run, or one per line with --follow."""
+    if follow:
+        print(json.dumps(obj, ensure_ascii=False), flush=True)
+    else:
+        out(obj)
 
 
 # ---- jobs and files ----
@@ -1193,6 +1304,13 @@ def parser() -> argparse.ArgumentParser:
     g = s.add_mutually_exclusive_group(required=True)
     g.add_argument("--in", dest="in_")
     g.add_argument("--cancel", action="store_true")
+    s = add("remind", cmd_remind, "wait for the reminder 30, 20 and 10 minutes before the console timer shuts it down")
+    s.add_argument("instance")
+    s.add_argument("--at", default="30,20,10", help="minutes before the timer (default 30,20,10)")
+    s.add_argument("--follow", action="store_true", help="keep going until the instance is off, one JSON object per line")
+    s.add_argument("--interval", type=int, default=60, help="seconds between looks at the console (default 60)")
+    s.add_argument("--notify-cmd", help="also run this command per reminder, the message in $AUTOPILOT_REMINDER")
+    s.add_argument("--no-jobs", action="store_true", help="do not ask the instance over SSH which jobs still run")
 
     s = add("run", cmd_run, "start a job: autopilot run ID NAME [--then-off] -- COMMAND")
     s.add_argument("instance")
